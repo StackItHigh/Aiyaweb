@@ -470,10 +470,12 @@
                         <div class="token-info">
                             <div class="token-main">
                                 <div class="token-logo">
-                                    <img src="${token.logoUrl || '/api/placeholder/24/24'}" 
-                                         alt="${token.symbol}" 
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="token-fallback" style="display:none;">
+                                    ${token.logoUrl ? 
+                                        `<img src="${token.logoUrl}" 
+                                             alt="${token.symbol}" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                                        ''}
+                                    <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'};">
                                         ${token.symbol.charAt(0)}
                                     </div>
                                 </div>

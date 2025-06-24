@@ -8,6 +8,8 @@ async function getBaseBuySignals() {
     
     const topTokens = data.data.slice(0, 15).map(pool => {
       const change24h = parseFloat(pool.attributes.price_change_percentage.h24) || 0;
+      const change6h = parseFloat(pool.attributes.price_change_percentage.h6) || 0;
+      const change1h = parseFloat(pool.attributes.price_change_percentage.h1) || 0;
       const volume = parseFloat(pool.attributes.volume_usd.h24) || 0;
       const name = pool.attributes.name ? pool.attributes.name.split('/')[0] : 'Unknown';
       const symbol = pool.attributes.base_token_symbol || '?';
@@ -45,10 +47,15 @@ async function getBaseBuySignals() {
         }
       }
       
-      // Method 4: Generic token icons as final fallback
-      if (!logoUrl) {
-        logoUrl = `https://cryptologos.cc/logos/${symbol.toLowerCase()}-${symbol.toLowerCase()}-logo.png`;
+      // TEMP: Force some test logos to debug
+      if (symbol.toUpperCase() === 'BRETT') {
+        logoUrl = 'https://assets.coingecko.com/coins/images/30148/standard/brett.png';
+      } else if (symbol.toUpperCase() === 'DEGEN') {
+        logoUrl = 'https://assets.coingecko.com/coins/images/34515/standard/degen.png';
       }
+      
+      // Debug: Log what we're setting
+      console.log(`Setting logo for ${symbol}:`, logoUrl);
       
       // Generate buy signal score
       let score = 0;
@@ -71,7 +78,9 @@ async function getBaseBuySignals() {
         name: name.length > 12 ? name.substring(0, 12) + '...' : name,
         symbol: symbol.toUpperCase(),
         price,
-        change: change24h,
+        change24h,
+        change6h,
+        change1h,
         volume,
         score,
         logoUrl,

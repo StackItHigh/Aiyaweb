@@ -122,7 +122,9 @@
                         <div class="col-rank">#</div>
                         <div class="col-token">Token</div>
                         <div class="col-price">Price</div>
-                        <div class="col-change">24h Change</div>
+                        <div class="col-change1h">1h</div>
+                        <div class="col-change6h">6h</div>
+                        <div class="col-change24h">24h</div>
                         <div class="col-volume">Volume</div>
                         <div class="col-signal">Signal</div>
                     </div>
@@ -484,7 +486,7 @@
                                              onerror="console.log('❌ Logo failed:', '${token.symbol}', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                              style="display: block;">` : 
                                         ''}
-                                    <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'}; width: 24px; height: 24px; background: var(--terminal-green); color: var(--terminal-black); border-radius: 50%; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">
+                                    <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'};">
                                         ${token.symbol.charAt(0)}
                                     </div>
                                 </div>
@@ -496,13 +498,19 @@
                         </div>
                     </div>
                     <div class="col-price">${formatNumber(parseFloat(token.price) || 0)}</div>
-                    <div class="col-change ${token.change >= 0 ? 'positive' : 'negative'}">
-                        ${token.change >= 0 ? '+' : ''}${(token.change || 0).toFixed(1)}%
+                    <div class="col-change1h ${(token.change1h || 0) >= 0 ? 'positive' : 'negative'}">
+                        ${(token.change1h || 0) >= 0 ? '+' : ''}${(token.change1h || 0).toFixed(1)}%
+                    </div>
+                    <div class="col-change6h ${(token.change6h || 0) >= 0 ? 'positive' : 'negative'}">
+                        ${(token.change6h || 0) >= 0 ? '+' : ''}${(token.change6h || 0).toFixed(1)}%
+                    </div>
+                    <div class="col-change24h ${(token.change24h || 0) >= 0 ? 'positive' : 'negative'}">
+                        ${(token.change24h || 0) >= 0 ? '+' : ''}${(token.change24h || 0).toFixed(1)}%
                     </div>
                     <div class="col-volume">${formatNumber(token.volume || 0)}</div>
                     <div class="col-signal">
-                        <span class="signal-badge ${getSignalText(token.change).toLowerCase()}">
-                            ${getSignalIcon(token.change)} ${getSignalText(token.change)}
+                        <span class="signal-badge ${getSignalText(token.change24h || 0).toLowerCase()}">
+                            ${getSignalIcon(token.change24h || 0)} ${getSignalText(token.change24h || 0)}
                         </span>
                     </div>
                 </div>

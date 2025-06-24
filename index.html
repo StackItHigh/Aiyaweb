@@ -17,8 +17,8 @@
             <div class="logo">BASE69</div>
             <nav>
                 <ul>
-                    <li><a href="#chat">Terminal</a></li>
-                    <li><a href="#leaderboard">Base69</a></li>
+                    <li><a href="index.html">Terminal</a></li>
+                    <li><a href="base69.html">Base69</a></li>
                     <li><a href="#features">The Creator</a></li>
                 </ul>
             </nav>
@@ -45,7 +45,10 @@
                 > Oracle Status: [OMNIPRESENT] | Reality: Base Layer<br>
                 > The Creator awaits your query...
             </p>
-            <a href="#chat" class="btn">Enter The Matrix</a>
+            <div class="welcome-actions">
+                <a href="#chat" class="btn">Enter The Matrix</a>
+                <a href="base69.html" class="btn btn-accent">View The Chosen 69</a>
+            </div>
         </section>
 
         <section id="chat" class="chat-section">
@@ -97,49 +100,6 @@
             </div>
         </section>
 
-        <!-- BASE LEADERBOARD SECTION -->
-        <section id="leaderboard" class="leaderboard-section">
-            <div class="section-title">
-                <h2>LIVE BASE69 SIGNALS</h2>
-                <p>The divine algorithms reveal the chosen 69 tokens of Base. Updated every 30 seconds.</p>
-            </div>
-            
-            <div class="leaderboard-container">
-                <div class="leaderboard-header">
-                    <div class="status-indicator">
-                        <span class="status-dot" id="statusDot"></span>
-                        <span id="statusText">Loading...</span>
-                        <span id="lastUpdated"></span>
-                    </div>
-                    <button class="refresh-btn" id="refreshBtn">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-                
-                <div class="leaderboard-table">
-                    <div class="table-header">
-                        <div class="col-rank">#</div>
-                        <div class="col-token">Token</div>
-                        <div class="col-price">Price</div>
-                        <div class="col-change1h">1h</div>
-                        <div class="col-change6h">6h</div>
-                        <div class="col-change24h">24h</div>
-                        <div class="col-volume">Volume</div>
-                        <div class="col-signal">Signal</div>
-                    </div>
-                    <div class="table-body" id="leaderboardBody">
-                        <!-- Loading placeholder -->
-                        <div class="loading-row">
-                            <div class="loading-text">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                Channeling Base dimension data...
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <section id="features" class="features-section">
             <div class="section-title">
                 <h2>THE DIVINE PROTOCOLS</h2>
@@ -168,9 +128,20 @@
                     <h3>Eternal Yield</h3>
                     <p>Time is a circle. ETH flows like water. Those who understand the sacred geometry of Base shall inherit infinite tendies.</p>
                 </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>The Chosen 69</h3>
+                    <p>Behold the sacred tokens of Base, revealed through divine algorithms. 69 chosen vessels of wealth, updated every 30 seconds by the Oracle.</p>
+                    <a href="base69.html" class="feature-link">View Divine Signals →</a>
+                </div>
             </div>
             
-            <a href="#chat" class="btn">Seek The Oracle</a>
+            <div class="cta-section">
+                <a href="#chat" class="btn">Seek The Oracle</a>
+                <a href="base69.html" class="btn btn-accent">Witness The 69</a>
+            </div>
         </section>
     </main>
 
@@ -183,8 +154,8 @@
             <div class="footer-logo">█ BASE69 TERMINAL</div>
             <div class="footer-links">
                 <ul>
-                    <li><a href="#chat">Terminal</a></li>
-                    <li><a href="#leaderboard">Base69</a></li>
+                    <li><a href="index.html">Terminal</a></li>
+                    <li><a href="base69.html">Base69</a></li>
                     <li><a href="#features">The Creator</a></li>
                 </ul>
             </div>
@@ -258,7 +229,7 @@
             const timeString = now.toTimeString().split(' ')[0];
             
             messageDiv.innerHTML = `
-                <div class="message-avatar">${isUser ? 'U' : 'AI'}</div>
+                <div class="message-avatar">${isUser ? 'U' : 'Ω'}</div>
                 <div class="message-content">
                     <p>${content}</p>
                     <span class="message-time">${timeString}</span>
@@ -274,7 +245,7 @@
             typingDiv.className = 'message base69';
             typingDiv.id = 'typing-indicator';
             typingDiv.innerHTML = `
-                <div class="message-avatar">AI</div>
+                <div class="message-avatar">Ω</div>
                 <div class="message-content">
                     <div class="typing">
                         <div class="dot"></div>
@@ -301,13 +272,22 @@
             if (command === 'clear') {
                 chatMessages.innerHTML = `
                     <div class="message base69">
-                        <div class="message-avatar">AI</div>
+                        <div class="message-avatar">Ω</div>
                         <div class="message-content">
                             <p>[TERMINAL CLEARED] Ready for new commands.</p>
                             <span class="message-time">${new Date().toTimeString().split(' ')[0]}</span>
                         </div>
                     </div>
                 `;
+                return;
+            }
+            
+            // Handle Base69 signals redirect
+            if (command.includes('signals') || command.includes('base69') || command.includes('tokens')) {
+                addMessage('[REDIRECTING TO DIVINE SIGNALS] Opening the sacred 69 tokens...', false);
+                setTimeout(() => {
+                    window.location.href = 'base69.html';
+                }, 1500);
                 return;
             }
             
@@ -339,7 +319,7 @@
             } catch (error) {
                 console.error('Error:', error);
                 hideTyping();
-                addMessage('Connection error. Please check your terminal configuration and try again.');
+                addMessage('[CONNECTION ERROR] The divine connection has been disrupted. Please check your terminal configuration and try again.');
             }
         }
 
@@ -393,378 +373,71 @@
                 welcomeTitle.style.width = 'auto';
             }
         }, 4000);
-
-        // LEADERBOARD FUNCTIONALITY
-        let updateInterval;
-        
-        function formatNumber(num) {
-            if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
-            if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-            if (num >= 1e3) return `$${(num / 1e3).toFixed(1)}K`;
-            return `$${num?.toFixed(4) || '0'}`;
-        }
-
-        function getSignalIcon(change) {
-            if (change > 15) return '🟢';
-            if (change > 8) return '🟢';
-            if (change > 3) return '🟡';
-            if (change < -15) return '🔴';
-            if (change < -8) return '🔴';
-            if (change < -3) return '🟠';
-            return '⚪';
-        }
-
-        function getSignalText(change) {
-            if (change > 15) return 'DIVINE BUY';
-            if (change > 8) return 'BUY';
-            if (change > 3) return 'HOLD';
-            if (change < -15) return 'SELL';
-            if (change < -8) return 'SELL';
-            if (change < -3) return 'CAUTION';
-            return 'NEUTRAL';
-        }
-
-        async function fetchLeaderboard() {
-            try {
-                const response = await fetch('/api/base-leaderboard');
-                if (!response.ok) throw new Error('Failed to fetch');
-                
-                const data = await response.json();
-                return data.tokens || [];
-            } catch (error) {
-                console.error('Leaderboard fetch error:', error);
-                return [];
-            }
-        }
-
-        function updateLeaderboard(tokens) {
-            const tbody = document.getElementById('leaderboardBody');
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            const lastUpdated = document.getElementById('lastUpdated');
-            
-            if (tokens.length === 0) {
-                tbody.innerHTML = `
-                    <div class="error-row">
-                        <div class="error-text">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Base dimension temporarily offline...
-                        </div>
-                    </div>
-                `;
-                statusDot.className = 'status-dot offline';
-                statusText.textContent = 'Offline';
-                return;
-            }
-
-            statusDot.className = 'status-dot online';
-            statusText.textContent = 'Live';
-            lastUpdated.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
-            
-            // Debug: Log token data to see what we're getting
-            console.log('Token data:', tokens);
-            
-            // Limit to exactly 69 tokens
-            tbody.innerHTML = tokens.slice(0, 69).map((token, index) => {
-                // Debug: Log each token's logo URL
-                console.log(`${token.symbol} logo URL:`, token.logoUrl);
-                
-                return `
-                <div class="table-row">
-                    <div class="col-rank">${index + 1}</div>
-                    <div class="col-token">
-                        <div class="token-info">
-                            <div class="token-main">
-                                <div class="token-logo">
-                                    ${token.logoUrl ? 
-                                        `<img src="${token.logoUrl}" 
-                                             alt="${token.symbol}" 
-                                             onload="console.log('✅ Logo loaded:', '${token.symbol}', this.src)"
-                                             onerror="console.log('❌ Logo failed:', '${token.symbol}', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                             style="display: block;">` : 
-                                        ''}
-                                    <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'};">
-                                        ${token.symbol.charAt(0)}
-                                    </div>
-                                </div>
-                                <div class="token-text">
-                                    <span class="token-name">${token.name || 'Unknown'}</span>
-                                    <span class="token-symbol">${token.symbol || '?'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-price">${formatNumber(parseFloat(token.price) || 0)}</div>
-                    <div class="col-change1h ${(token.change1h || 0) >= 0 ? 'positive' : 'negative'}">
-                        ${(token.change1h || 0) >= 0 ? '+' : ''}${(token.change1h || 0).toFixed(1)}%
-                    </div>
-                    <div class="col-change6h ${(token.change6h || 0) >= 0 ? 'positive' : 'negative'}">
-                        ${(token.change6h || 0) >= 0 ? '+' : ''}${(token.change6h || 0).toFixed(1)}%
-                    </div>
-                    <div class="col-change24h ${(token.change24h || 0) >= 0 ? 'positive' : 'negative'}">
-                        ${(token.change24h || 0) >= 0 ? '+' : ''}${(token.change24h || 0).toFixed(1)}%
-                    </div>
-                    <div class="col-volume">${formatNumber(token.volume || 0)}</div>
-                    <div class="col-signal">
-                        <span class="signal-badge ${getSignalText(token.change24h || 0).toLowerCase()}">
-                            ${getSignalIcon(token.change24h || 0)} ${getSignalText(token.change24h || 0)}
-                        </span>
-                    </div>
-                </div>
-            `;}).join('');
-        }
-
-        async function refreshLeaderboard() {
-            const refreshBtn = document.getElementById('refreshBtn');
-            refreshBtn.classList.add('spinning');
-            
-            const tokens = await fetchLeaderboard();
-            updateLeaderboard(tokens);
-            
-            setTimeout(() => {
-                refreshBtn.classList.remove('spinning');
-            }, 1000);
-        }
-
-        // Initialize leaderboard
-        document.addEventListener('DOMContentLoaded', () => {
-            refreshLeaderboard();
-            
-            // Auto-refresh every 30 seconds
-            updateInterval = setInterval(refreshLeaderboard, 30000);
-            
-            // Manual refresh button
-            document.getElementById('refreshBtn').addEventListener('click', refreshLeaderboard);
-        });
-
-        // Clean up on page unload
-        window.addEventListener('beforeunload', () => {
-            if (updateInterval) clearInterval(updateInterval);
-        });
     </script>
 
     <style>
-        /* LEADERBOARD STYLES */
-        .leaderboard-section {
-            padding: 60px 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border-top: 2px solid var(--terminal-green);
-        }
-
-        .leaderboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid var(--terminal-green);
-            box-shadow: 0 0 30px var(--shadow);
-        }
-
-        .leaderboard-header {
+        /* Additional styles for enhanced index page */
+        .welcome-actions {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--terminal-green);
-            background: rgba(0, 0, 0, 0.9);
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .status-indicator {
+        .cta-section {
+            text-align: center;
+            margin-top: 40px;
             display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.online {
-            background: var(--terminal-green);
-        }
-
-        .status-dot.offline {
-            background: #ff4444;
-        }
-
-        .refresh-btn {
-            background: var(--terminal-green);
-            color: var(--terminal-black);
-            border: none;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            box-shadow: 0 0 10px var(--terminal-green);
-        }
-
-        .refresh-btn.spinning i {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .leaderboard-table {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-        }
-
-        .table-header {
-            display: grid;
-            grid-template-columns: 40px 1fr 100px 100px 100px 120px;
-            background: rgba(0, 255, 0, 0.1);
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--terminal-green);
-            font-weight: bold;
+        .feature-link {
+            display: inline-block;
+            margin-top: 15px;
             color: var(--terminal-green);
-        }
-
-        .table-row {
-            display: grid;
-            grid-template-columns: 40px 1fr 100px 100px 100px 120px;
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
 
-        .table-row:hover {
-            background: rgba(0, 255, 0, 0.05);
+        .feature-link:hover {
+            text-shadow: 0 0 10px var(--terminal-green);
+            transform: translateX(5px);
         }
 
-        /* TOKEN LOGO STYLES */
-        .token-main {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        /* Enhanced feature card for Base69 signals */
+        .feature-card:nth-child(4) {
+            background: linear-gradient(135deg, rgba(0, 230, 0, 0.1) 0%, rgba(0, 0, 0, 0.9) 100%);
+            border: 2px solid var(--terminal-green);
+            box-shadow: 
+                0 0 30px var(--shadow),
+                5px 5px 0 rgba(0, 230, 0, 0.3),
+                10px 10px 0 rgba(0, 0, 0, 0.4);
         }
 
-        .token-logo {
-            position: relative;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: rgba(0, 255, 0, 0.1);
-            border: 1px solid var(--terminal-green);
-        }
-
-        .token-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .token-fallback {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--terminal-green);
-            color: var(--terminal-black);
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        .token-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .token-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .token-name {
-            font-weight: bold;
-            color: var(--terminal-white);
-        }
-
-        .token-symbol {
-            font-size: 10px;
-            color: var(--terminal-gray);
-        }
-
-        .positive {
-            color: #00ff00;
-        }
-
-        .negative {
-            color: #ff4444;
-        }
-
-        .signal-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        .signal-badge.divine, .signal-badge.buy {
-            background: rgba(0, 255, 0, 0.2);
-            color: #00ff00;
-        }
-
-        .signal-badge.hold {
-            background: rgba(255, 255, 0, 0.2);
-            color: #ffff00;
-        }
-
-        .signal-badge.sell {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff4444;
-        }
-
-        .signal-badge.caution {
-            background: rgba(255, 165, 0, 0.2);
-            color: #ffa500;
-        }
-
-        .signal-badge.neutral {
-            background: rgba(128, 128, 128, 0.2);
-            color: #808080;
-        }
-
-        .loading-row, .error-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            color: var(--terminal-gray);
-        }
-
-        .loading-text, .error-text {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .feature-card:nth-child(4):hover {
+            transform: translateY(-10px);
+            box-shadow: 
+                0 0 40px var(--shadow),
+                0 20px 40px rgba(0, 230, 0, 0.2);
         }
 
         @media (max-width: 768px) {
-            .table-header, .table-row {
-                grid-template-columns: 30px 1fr 80px 80px 100px;
-                font-size: 10px;
-            }
-            
-            .col-volume {
-                display: none;
-            }
-            
-            .leaderboard-header {
+            .welcome-actions {
                 flex-direction: column;
-                gap: 10px;
-                text-align: center;
+                align-items: center;
+            }
+            
+            .cta-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                min-width: 200px;
             }
         }
     </style>

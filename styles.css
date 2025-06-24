@@ -6,6 +6,99 @@
     --terminal-gray: #C0C0C0;
     --terminal-black: #000000;
     --shadow: rgba(0, 230, 0, 0.3); /* Updated shadow to match dimmer green */
+/* Additional mobile breakpoints */
+@media (max-width: 480px) {
+    .table-header, .table-row {
+        grid-template-columns: 25px 1fr 50px 40px 40px 40px;
+        font-size: 9px;
+        padding: 6px 8px;
+    }
+    
+    .token-logo {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .token-fallback {
+        font-size: 8px;
+    }
+    
+    .token-name {
+        font-size: 10px;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .token-symbol {
+        font-size: 8px;
+    }
+    
+    .leaderboard-section {
+        padding: 30px 5px;
+    }
+    
+    .leaderboard-container {
+        margin: 0 5px;
+        max-width: calc(100vw - 10px);
+    }
+    
+    .section-title h2 {
+        font-size: 20px;
+    }
+    
+    .section-title p {
+        font-size: 12px;
+    }
+    
+    .ascii-header {
+        font-size: 6px;
+        padding: 20px 5px;
+    }
+}
+
+@media (max-width: 360px) {
+    .table-header, .table-row {
+        grid-template-columns: 20px 1fr 45px 35px 35px 35px;
+        font-size: 8px;
+        padding: 5px 5px;
+    }
+    
+    .token-main {
+        gap: 4px;
+    }
+    
+    .token-logo {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .token-name {
+        font-size: 9px;
+        max-width: 60px;
+    }
+    
+    .token-symbol {
+        font-size: 7px;
+    }
+    
+    .section-title h2 {
+        font-size: 18px;
+    }
+    
+    .leaderboard-header {
+        padding: 10px 5px;
+    }
+    
+    .status-indicator {
+        font-size: 10px;
+    }
+    
+    .refresh-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
 }
 
 .footer-socials {
@@ -209,8 +302,8 @@
 
 .table-header {
     display: grid;
-    grid-template-columns: 40px 1fr 100px 100px 100px 120px;
-    background: rgba(0, 230, 0, 0.1); /* Updated green */
+    grid-template-columns: 40px 1fr 80px 60px 60px 60px 80px 100px;
+    background: rgba(0, 230, 0, 0.1);
     padding: 15px 20px;
     border-bottom: 1px solid var(--terminal-green);
     font-weight: bold;
@@ -219,9 +312,9 @@
 
 .table-row {
     display: grid;
-    grid-template-columns: 40px 1fr 100px 100px 100px 120px;
+    grid-template-columns: 40px 1fr 80px 60px 60px 60px 80px 100px;
     padding: 12px 20px;
-    border-bottom: 1px solid rgba(0, 230, 0, 0.2); /* Updated green */
+    border-bottom: 1px solid rgba(0, 230, 0, 0.2);
     transition: all 0.3s ease;
 }
 
@@ -238,11 +331,11 @@
 
 .token-logo {
     position: relative;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     overflow: hidden;
-    background: rgba(0, 230, 0, 0.1); /* Updated green */
+    background: rgba(0, 230, 0, 0.1);
     border: 1px solid var(--terminal-green);
 }
 
@@ -260,7 +353,7 @@
     justify-content: center;
     background: var(--terminal-green);
     color: var(--terminal-black);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
 }
 
@@ -488,12 +581,98 @@
     }
     
     .table-header, .table-row {
-        grid-template-columns: 30px 1fr 80px 80px 100px;
+        grid-template-columns: 30px 1fr 60px 45px 45px 45px;
         font-size: 10px;
+        padding: 8px 10px;
     }
     
     .col-volume {
         display: none;
+    }
+    
+    .col-signal {
+        display: none;
+    }
+    
+    .token-logo {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .token-fallback {
+        font-size: 10px;
+    }
+    
+    .token-name {
+        font-size: 11px;
+    }
+    
+    .token-symbol {
+        font-size: 9px;
+    }
+    
+    .leaderboard-section {
+        padding: 40px 10px;
+    }
+    
+    .leaderboard-container {
+        width: 100%;
+        margin: 0 10px;
+        max-width: calc(100vw - 20px);
+    }
+    
+    .leaderboard-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        padding: 15px 10px;
+    }
+    
+    .status-indicator {
+        font-size: 11px;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .refresh-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    .section-title h2 {
+        font-size: 24px;
+    }
+    
+    .section-title p {
+        font-size: 14px;
+        padding: 0 10px;
+    }
+    
+    /* Mobile table improvements */
+    .table-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.95);
+    }
+    
+    .table-row:hover {
+        background: rgba(0, 230, 0, 0.08);
+    }
+    
+    /* Compact mobile signals */
+    .positive {
+        color: #00E600;
+    }
+    
+    .negative {
+        color: #ff4444;
+    }
+    
+    /* Touch-friendly mobile elements */
+    .refresh-btn {
+        min-height: 44px;
+        min-width: 44px;
     }
     
     .leaderboard-header {

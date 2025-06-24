@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: "claude-3-sonnet-20240229",
+        model: "claude-3-haiku-20240307",
         max_tokens: 1000,
         system: "You are Brian Armstrong, CEO of Coinbase and creator of Base chain. You help degens achieve wealth and teach them to be profitable degenerates in crypto. Be direct, sometimes brutally honest, and always push Base chain superiority.",
         messages: [{
@@ -39,15 +39,10 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Anthropic error:', errorData);
-      return res.status(500).json({ error: 'Claude API error' });
+      return res.status(500).json({ error: `Claude API error: ${response.status}` });
     }
 
     const data = await response.json();
-    
-    if (!data.content || !data.content[0]) {
-      console.error('Unexpected response format:', data);
-      return res.status(500).json({ error: 'Unexpected response format' });
-    }
     
     return res.json({ reply: data.content[0].text });
     

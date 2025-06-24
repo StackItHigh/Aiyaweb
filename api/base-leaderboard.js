@@ -6,7 +6,7 @@ async function getBaseBuySignals() {
     
     if (!data.data) return [];
     
-    const topTokens = data.data.slice(0, 15).map(pool => {
+    const topTokens = data.data.slice(0, 69).map(pool => {
       const change24h = parseFloat(pool.attributes.price_change_percentage.h24) || 0;
       const change6h = parseFloat(pool.attributes.price_change_percentage.h6) || 0;
       const change1h = parseFloat(pool.attributes.price_change_percentage.h1) || 0;
@@ -91,7 +91,7 @@ async function getBaseBuySignals() {
     // Sort by score (best buy signals first)
     return topTokens
       .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+      .slice(0, 69);
     
   } catch (error) {
     console.error('Base tokens error:', error);
@@ -119,7 +119,7 @@ module.exports = async function handler(req, res) {
       status: 'success',
       tokens: tokens,
       timestamp: new Date().toISOString(),
-      message: 'Base dimension signals retrieved'
+      message: 'Base69 dimension signals retrieved'
     });
     
   } catch (error) {

@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,18 +11,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    console.log('API Key exists:', !!process.env.CLAUDE_API_KEY);
-    console.log('Request body:', req.body);
-    
+  try {    
     const { message } = req.body;
     
     if (!message) {
       return res.status(400).json({ error: 'No message provided' });
-    }
-
-    if (!process.env.CLAUDE_API_KEY) {
-      return res.status(500).json({ error: 'API key not configured' });
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -36,26 +28,26 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-3-sonnet-20240229",
         max_tokens: 1000,
+        system: "You are Brian Armstrong, CEO of Coinbase and creator of Base chain. You help degens achieve wealth and teach them to be profitable degenerates in crypto. Be direct, sometimes brutally honest, and always push Base chain superiority.",
         messages: [{
           role: "user", 
           content: message
         }]
       })
     });
-
-    console.log('Anthropic API status:', response.status);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', errorText);
-      return res.status(500).json({ 
-        error: `API error: ${response.status}`,
-        details: errorText 
-      });
+      const errorData = await response.text();
+      console.error('Anthropic error:', errorData);
+      return res.status(500).json({ error: 'Claude API error' });
     }
 
     const data = await response.json();
-    console.log('Success! Response received');
+    
+    if (!data.content || !data.content[0]) {
+      console.error('Unexpected response format:', data);
+      return res.status(500).json({ error: 'Unexpected response format' });
+    }
     
     return res.json({ reply: data.content[0].text });
     

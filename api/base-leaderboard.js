@@ -14,26 +14,40 @@ async function getBaseBuySignals() {
       const price = parseFloat(pool.attributes.base_token_price_usd) || 0;
       const tokenAddress = pool.relationships?.base_token?.data?.id?.split('_')[1] || '';
       
-      // Simplified logo strategy - use reliable sources only
+      // Try multiple logo sources with better fallbacks
       let logoUrl = null;
       
-      // Method 1: Direct from GeckoTerminal (when available)
-      if (pool.attributes.base_token_image_url && pool.attributes.base_token_image_url.startsWith('http')) {
+      // Method 1: Direct from GeckoTerminal (when available and valid)
+      if (pool.attributes.base_token_image_url && 
+          pool.attributes.base_token_image_url.startsWith('http') && 
+          !pool.attributes.base_token_image_url.includes('missing.png')) {
         logoUrl = pool.attributes.base_token_image_url;
       }
       
-      // Method 2: Hardcoded reliable logos for popular Base tokens
-      const knownLogos = {
-        'BRETT': 'https://dd.dexscreener.com/ds-data/tokens/base/0x532f27101965dd16442e59d40670faf5ebb142e4.png',
-        'DEGEN': 'https://dd.dexscreener.com/ds-data/tokens/base/0x4ed4e862860bed51a9570b96d89af5e1b0efefed.png',
-        'TOSHI': 'https://dd.dexscreener.com/ds-data/tokens/base/0xac1bd2486aaf3b5c0fc3fd868558b082a531b2b4.png',
-        'HIGHER': 'https://dd.dexscreener.com/ds-data/tokens/base/0x0578d8a44db98b23bf096a382e016e29a5ce0ffe.png',
-        'MFER': 'https://dd.dexscreener.com/ds-data/tokens/base/0x2169df818b74b2b1c1af9ad72c8bdedbeab7b9b7.png',
-        'BASED': 'https://dd.dexscreener.com/ds-data/tokens/base/0x44971abf0251958492fee97da3e5c5ada88b9185.png'
-      };
+      // Method 2: Try DEXScreener's CDN with the token address
+      if (!logoUrl && tokenAddress && tokenAddress.length === 42) {
+        logoUrl = `https://dd.dexscreener.com/ds-data/tokens/base/${tokenAddress.toLowerCase()}.png`;
+      }
       
-      if (!logoUrl && knownLogos[symbol.toUpperCase()]) {
-        logoUrl = knownLogos[symbol.toUpperCase()];
+      // Method 3: CoinGecko API for popular tokens (by symbol)
+      if (!logoUrl) {
+        const coinGeckoIds = {
+          'BRETT': 'brett',
+          'DEGEN': 'degen-base', 
+          'TOSHI': 'toshi',
+          'HIGHER': 'higher',
+          'MFER': 'mfercoin',
+          'BASED': 'based-money'
+        };
+        
+        if (coinGeckoIds[symbol.toUpperCase()]) {
+          logoUrl = `https://assets.coingecko.com/coins/images/large/${coinGeckoIds[symbol.toUpperCase()]}.png`;
+        }
+      }
+      
+      // Method 4: Generic token icons as final fallback
+      if (!logoUrl) {
+        logoUrl = `https://cryptologos.cc/logos/${symbol.toLowerCase()}-${symbol.toLowerCase()}-logo.png`;
       }
       
       // Generate buy signal score

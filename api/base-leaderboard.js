@@ -12,6 +12,19 @@ async function getBaseBuySignals() {
       const name = pool.attributes.name ? pool.attributes.name.split('/')[0] : 'Unknown';
       const symbol = pool.attributes.base_token_symbol || '?';
       const price = parseFloat(pool.attributes.base_token_price_usd) || 0;
+      const tokenAddress = pool.relationships?.base_token?.data?.id?.split('_')[1] || '';
+      
+      // Get token logo from multiple sources with fallbacks
+      let logoUrl = null;
+      
+      // Method 1: GeckoTerminal direct image (when available)
+      if (pool.attributes.base_token_image_url) {
+        logoUrl = pool.attributes.base_token_image_url;
+      }
+      // Method 2: Trust Wallet assets (most comprehensive)
+      else if (tokenAddress && tokenAddress.length === 42) {
+        logoUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/assets/${tokenAddress}/logo.png`;
+      }
       
       // Generate buy signal score
       let score = 0;
@@ -36,7 +49,9 @@ async function getBaseBuySignals() {
         price,
         change: change24h,
         volume,
-        score
+        score,
+        logoUrl,
+        tokenAddress
       };
     });
     

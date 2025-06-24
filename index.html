@@ -468,8 +468,20 @@
                     <div class="col-rank">${index + 1}</div>
                     <div class="col-token">
                         <div class="token-info">
-                            <span class="token-name">${token.name || 'Unknown'}</span>
-                            <span class="token-symbol">${token.symbol || '?'}</span>
+                            <div class="token-main">
+                                <div class="token-logo">
+                                    <img src="${token.logoUrl || '/api/placeholder/24/24'}" 
+                                         alt="${token.symbol}" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="token-fallback" style="display:none;">
+                                        ${token.symbol.charAt(0)}
+                                    </div>
+                                </div>
+                                <div class="token-text">
+                                    <span class="token-name">${token.name || 'Unknown'}</span>
+                                    <span class="token-symbol">${token.symbol || '?'}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-price">${formatNumber(parseFloat(token.price) || 0)}</div>
@@ -612,6 +624,46 @@
 
         .table-row:hover {
             background: rgba(0, 255, 0, 0.05);
+        }
+
+        /* TOKEN LOGO STYLES */
+        .token-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .token-logo {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid var(--terminal-green);
+        }
+
+        .token-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .token-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--terminal-green);
+            color: var(--terminal-black);
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .token-text {
+            display: flex;
+            flex-direction: column;
         }
 
         .token-info {

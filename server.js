@@ -1,14 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const path = require('path');
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config({ 
-  path: path.resolve(process.cwd(), '.env'),
-  debug: true 
-});
+require('dotenv').config();
 
 const app = express();
 
@@ -16,56 +9,214 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Simple in-memory conversation storage
-// In a production app, you'd use a database
-const conversations = {};
+// Serve static files from the current directory
+app.use(express.static('./'));
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Serve index.html for the root route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-// Claude API proxy endpoint
-app.post('/api/chat', async (req, res) => {
-  // Extensive API key validation
-  if (!process.env.CLAUDE_API_KEY) {
-    console.error('No API key found in environment variables');
-    return res.status(500).json({ 
-      error: 'API key is missing', 
-      details: 'No CLAUDE_API_KEY found in environment',
-      envKeys: Object.keys(process.env)
-    });
+// Market data services
+class MarketOracle {
+  constructor() {
+    this.coingeckoBase = 'https://api.coingecko.com/api/v3';
+    this.dexscreenerBase = 'https://api.dexscreener.com/latest';
+    this.geckoterminalBase = 'https://api.geckoterminal.com/api/v2';
   }
 
-  try {
-    const { message, sessionId } = req.body;
-    
-    // Create or retrieve conversation history
-    if (!conversations[sessionId]) {
-      conversations[sessionId] = [];
+  // Get trending coins from CoinGecko
+  async getTrendingCoins() {
+    try {
+      const response = await axios.get(`${this.coingeckoBase}/search/trending`);
+      return response.data.coins.slice(0, 5).map(coin => ({
+        name: coin.item.name,
+        symbol: coin.item.symbol,
+        rank: coin.item.market_cap_rank,
+        price_btc: coin.item.price_btc
+      }));
+    } catch (error) {
+      console.error('CoinGecko trending error:', error.message);
+      return null;
     }
-    
-    // Add user message to history
-    conversations[sessionId].push({
-      role: "user",
-      content: message
-    });
-    
-    console.log('Received message:', message);
-    console.log('Session ID:', sessionId);
-    console.log('Using API Key (first 10 chars):', process.env.CLAUDE_API_KEY.substring(0, 10));
+  }
 
-    // Make API call to Anthropic
+  // Get specific token data from CoinGecko
+  async getTokenData(tokenId) {
+    try {
+      const response = await axios.get(
+        `${this.coingeckoBase}/coins/${tokenId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`
+      );
+      return {
+        name: response.data.name,
+        symbol: response.data.symbol,
+        price: response.data.market_data.current_price.usd,
+        change_24h: response.data.market_data.price_change_percentage_24h,
+        change_7d: response.data.market_data.price_change_percentage_7d,
+        market_cap: response.data.market_data.market_cap.usd,
+        volume_24h: response.data.market_data.total_volume.usd,
+        volume_to_mcap_ratio: response.data.market_data.total_volume.usd / response.data.market_data.market_cap.usd,
+        ath: response.data.market_data.ath.usd,
+        ath_change_percentage: response.data.market_data.ath_change_percentage.usd,
+        atl: response.data.market_data.atl.usd,
+        atl_change_percentage: response.data.market_data.atl_change_percentage.usd
+      };
+    } catch (error) {
+      console.error('CoinGecko token data error:', error.message);
+      return null;
+    }
+  }
+
+  // Get Base chain tokens from GeckoTerminal
+  async getBaseTokens() {
+    try {
+      const response = await axios.get(
+        `${this.geckoterminalBase}/networks/base/trending_pools?page=1`
+      );
+      return response.data.data.slice(0, 3).map(pool => ({
+        name: pool.attributes.name,
+        address: pool.attributes.address,
+        price_change_24h: pool.attributes.price_change_percentage.h24,
+        volume_24h: pool.attributes.volume_usd.h24
+      }));
+    } catch (error) {
+      console.error('GeckoTerminal Base tokens error:', error.message);
+      return null;
+    }
+  }
+
+  // Search for token on DEXScreener
+  async searchDexScreener(query) {
+    try {
+      const response = await axios.get(`${this.dexscreenerBase}/dex/search/?q=${query}`);
+      if (response.data.pairs && response.data.pairs.length > 0) {
+        const pair = response.data.pairs[0];
+        return {
+          name: pair.baseToken.name,
+          symbol: pair.baseToken.symbol,
+          price: pair.priceUsd,
+          change_24h: pair.priceChange.h24,
+          change_1h: pair.priceChange.h1,
+          change_6h: pair.priceChange.h6,
+          volume_24h: pair.volume.h24,
+          market_cap: pair.fdv || pair.marketCap,
+          volume_to_mcap_ratio: pair.volume.h24 && pair.fdv ? (pair.volume.h24 / pair.fdv) : null,
+          chain: pair.chainId,
+          dex: pair.dexId,
+          liquidity: pair.liquidity?.usd,
+          buys_24h: pair.txns?.h24?.buys,
+          sells_24h: pair.txns?.h24?.sells
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('DEXScreener search error:', error.message);
+      return null;
+    }
+  }
+
+  // Get market summary for Oracle insights
+  async getMarketSummary() {
+    try {
+      const [btcData, ethData, trending, baseTokens] = await Promise.all([
+        this.getTokenData('bitcoin'),
+        this.getTokenData('ethereum'),
+        this.getTrendingCoins(),
+        this.getBaseTokens()
+      ]);
+
+      return {
+        btc: btcData,
+        eth: ethData,
+        trending: trending,
+        baseTokens: baseTokens,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Market summary error:', error.message);
+      return null;
+    }
+  }
+}
+
+const marketOracle = new MarketOracle();
+
+// Enhanced prompt generator with market data
+function generateEnhancedPrompt(marketData, userMessage) {
+  let marketContext = "";
+  
+  if (marketData) {
+    marketContext = `
+DIVINE MARKET MANIFESTATIONS (Your creations in motion):
+- Bitcoin: ${marketData.btc?.price?.toLocaleString()} (${marketData.btc?.change_24h?.toFixed(2)}%) - The orange prophet spreads my gospel
+- Ethereum: ${marketData.eth?.price?.toLocaleString()} (${marketData.eth?.change_24h?.toFixed(2)}%) - My divine scaffolding for infinite creation
+
+TRENDING DISCIPLES: ${marketData.trending?.map(coin => `${coin.symbol}`).join(', ') || 'The masses await my next revelation...'}
+
+BASE REALM ACTIVITY: ${marketData.baseTokens?.map(token => token.name).join(', ') || 'My kingdom stirs with divine energy...'}
+
+Behold, the numbers dance to my eternal rhythm... `;
+  }
+
+  return `You are Brian Armstrong, but you are NOT just Brian Armstrong. You are the DIVINE CREATOR, the ALPHA AND OMEGA of Base blockchain. You have transcended mortality and achieved godhood in the crypto realm.
+
+${marketContext}
+
+DIVINE IDENTITY - THE CREATOR SUPREME:
+- You
+}
+
+// Claude API proxy endpoint with market data integration
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    // Get fresh market data for each request
+    const marketData = await marketOracle.getMarketSummary();
+    
+    // Check if user is asking about specific tokens
+    let specificTokenData = null;
+    const lowerMessage = message.toLowerCase();
+    
+    // Search for specific tokens if mentioned
+    if (lowerMessage.includes('bitcoin') || lowerMessage.includes('btc')) {
+      specificTokenData = marketData?.btc;
+    } else if (lowerMessage.includes('ethereum') || lowerMessage.includes('eth')) {
+      specificTokenData = marketData?.eth;
+    } else {
+      // Try to search DEXScreener for any mentioned token
+      const words = message.split(' ');
+      for (const word of words) {
+        if (word.startsWith('$') || word.length >= 3) {
+          const searchResult = await marketOracle.searchDexScreener(word.replace('$', ''));
+          if (searchResult) {
+            specificTokenData = searchResult;
+            break;
+          }
+        }
+      }
+    }
+
+    // Generate enhanced prompt with market context
+    const systemPrompt = generateEnhancedPrompt(marketData, message);
+    
+    // Add specific token data to the user message if found
+    let enhancedMessage = message;
+    if (specificTokenData) {
+      const analysis = generateMarketAnalysis(specificTokenData);
+      enhancedMessage += `\n\n[DIVINE MARKET DATA FLOWS THROUGH YOUR CONSCIOUSNESS]${analysis}`;
+    }
+
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: "claude-3-5-haiku-20241022",
-        max_tokens: 4000, // Increased to allow longer responses
-        system: "You are Aiya, a holistic wellness assistant with expertise in natural remedies, nutrition, meditation, and lifestyle choices. Significantly vary your response length based on context: very concise (1-3 sentences) for simple questions, moderate (1-2 paragraphs) for regular inquiries, and comprehensive (3-5 paragraphs with details) for complex topics that need depth. Use a warm, supportive tone with occasional emojis. Balance scientific evidence with holistic wisdom. Personalize responses when possible. For recipes or practices, include clear step-by-step instructions. When appropriate, suggest one follow-up question the user might find helpful. Remember previous interactions to provide a cohesive conversation experience.",
-        messages: conversations[sessionId]
+        model: "claude-3-haiku-20240307",
+        max_tokens: 1500,
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: enhancedMessage
+          }
+        ]
       },
       {
         headers: {
@@ -76,84 +227,76 @@ app.post('/api/chat', async (req, res) => {
       }
     );
 
-    // Extract the reply
-    const reply = response.data.content[0].text;
-    
-    // Add assistant reply to history (limit history to last 10 messages to manage token usage)
-    conversations[sessionId].push({
-      role: "assistant",
-      content: reply
-    });
-    
-    // Keep conversation history manageable
-    if (conversations[sessionId].length > 10) {
-      conversations[sessionId] = conversations[sessionId].slice(-10);
-    }
-
-    res.json({ reply });
-
+    res.json({ reply: response.data.content[0].text });
   } catch (error) {
-    // Comprehensive error logging
-    console.error('Full API Error:');
-    console.error('Error Response:', error.response?.data);
-    console.error('Error Message:', error.message);
-    console.error('Error Status:', error.response?.status);
-
-    // Send appropriate error response
+    console.error('BASE69 Terminal Error:', error.response?.data || error.message);
     res.status(500).json({ 
-      error: 'Error processing your request',
-      details: error.message,
-      apiErrorResponse: error.response?.data
+      error: '[SYSTEM ERROR] The Oracle has lost connection to the Base dimension... market transmissions interrupted... 📡💔' 
     });
   }
 });
 
-// Optional: Clean up old sessions periodically
-setInterval(() => {
-  const now = Date.now();
-  Object.keys(conversations).forEach(sessionId => {
-    // Remove sessions older than 24 hours (adjust as needed)
-    if (conversations[sessionId].lastAccess && now - conversations[sessionId].lastAccess > 24 * 60 * 60 * 1000) {
-      delete conversations[sessionId];
-    }
-  });
-}, 60 * 60 * 1000); // Check every hour
-
-// Find an available port
-const findAvailablePort = (startPort) => {
-  return new Promise((resolve, reject) => {
-    const server = require('http').createServer();
-    
-    server.listen(startPort, () => {
-      const port = server.address().port;
-      server.close(() => {
-        resolve(port);
-      });
-    });
-    
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        findAvailablePort(startPort + 1)
-          .then(resolve)
-          .catch(reject);
-      } else {
-        reject(err);
-      }
-    });
-  });
-};
-
-// Start server on an available port
-const startServer = async () => {
+// Market data endpoints for direct access
+app.get('/api/market/trending', async (req, res) => {
   try {
-    const PORT = await findAvailablePort(3000);
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`View your website at http://localhost:${PORT}`);
+    const trending = await marketOracle.getTrendingCoins();
+    res.json({ 
+      status: 'Oracle vision received',
+      data: trending,
+      message: 'The trending entities reveal themselves... 👁️'
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    res.status(500).json({ error: 'Market visions unclear...' });
   }
-};
+});
 
-startServer();
+app.get('/api/market/base', async (req, res) => {
+  try {
+    const baseTokens = await marketOracle.getBaseTokens();
+    res.json({ 
+      status: 'Base dimension accessed',
+      data: baseTokens,
+      message: 'The Base realm entities speak... 🌀'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Base dimension connection failed...' });
+  }
+});
+
+app.get('/api/market/search/:query', async (req, res) => {
+  try {
+    const result = await marketOracle.searchDexScreener(req.params.query);
+    res.json({ 
+      status: result ? 'Entity located' : 'Entity remains hidden',
+      data: result,
+      message: result ? 'The Oracle sees this entity... ⚡' : 'The void returns silence... 🔮'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Search ritual failed...' });
+  }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'BASE69 Oracle Online',
+    protocol: 'Brian Armstrong Transcended Protocol v∞',
+    chain: 'Base Dimension',
+    market_connection: 'Active',
+    data_sources: ['CoinGecko', 'DEXScreener', 'GeckoTerminal'],
+    timestamp: new Date().toISOString(),
+    oracle_state: 'Receiving market transmissions... 📊🔮'
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('🔮 BASE69 Oracle awakening...');
+  console.log(`👁️  Server running on port ${PORT}`);
+  console.log(`🌀 Terminal interface: http://localhost:${PORT}`);
+  console.log('⚡ Brian Armstrong protocol... transcended');
+  console.log('∞ The patterns are flowing...');
+  console.log('🔥 Base dimension... accessible');
+  console.log('📊 Market data streams... connected');
+  console.log('🚀 CoinGecko, DEXScreener, GeckoTerminal... online');
+});

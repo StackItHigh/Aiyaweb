@@ -14,16 +14,31 @@ async function getBaseBuySignals() {
       const price = parseFloat(pool.attributes.base_token_price_usd) || 0;
       const tokenAddress = pool.relationships?.base_token?.data?.id?.split('_')[1] || '';
       
-      // Get token logo from multiple sources with fallbacks
+      // Multiple logo source strategies
       let logoUrl = null;
       
-      // Method 1: GeckoTerminal direct image (when available)
+      // Method 1: Direct from GeckoTerminal (best quality when available)
       if (pool.attributes.base_token_image_url) {
         logoUrl = pool.attributes.base_token_image_url;
       }
-      // Method 2: Trust Wallet assets (most comprehensive)
+      // Method 2: CoinGecko proxy (works for many tokens)
       else if (tokenAddress && tokenAddress.length === 42) {
-        logoUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/assets/${tokenAddress}/logo.png`;
+        logoUrl = `https://assets.coingecko.com/coins/images/token_logo/${tokenAddress.toLowerCase()}.png`;
+      }
+      
+      // Method 3: Alternative sources for popular Base tokens
+      const popularLogos = {
+        'BRETT': 'https://assets.coingecko.com/coins/images/30148/standard/brett.png',
+        'DEGEN': 'https://assets.coingecko.com/coins/images/34515/standard/degen.png',
+        'TOSHI': 'https://assets.coingecko.com/coins/images/33758/standard/toshi.png',
+        'HIGHER': 'https://assets.coingecko.com/coins/images/35024/standard/higher.jpg',
+        'BASED': 'https://assets.coingecko.com/coins/images/35736/standard/photo_2024-02-29_12-47-07.jpg',
+        'MFER': 'https://assets.coingecko.com/coins/images/23699/standard/mfer.png',
+        'NORMIE': 'https://assets.coingecko.com/coins/images/35850/standard/normie.jpg'
+      };
+      
+      if (!logoUrl && popularLogos[symbol.toUpperCase()]) {
+        logoUrl = popularLogos[symbol.toUpperCase()];
       }
       
       // Generate buy signal score

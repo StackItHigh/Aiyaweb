@@ -480,10 +480,11 @@
                                     ${token.logoUrl ? 
                                         `<img src="${token.logoUrl}" 
                                              alt="${token.symbol}" 
-                                             onload="console.log('Image loaded:', '${token.symbol}')"
-                                             onerror="console.log('Image failed:', '${token.symbol}', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                                             onload="console.log('✅ Logo loaded:', '${token.symbol}', this.src)"
+                                             onerror="console.log('❌ Logo failed:', '${token.symbol}', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                             style="display: block;">` : 
                                         ''}
-                                    <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'};">
+                                    <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'}; width: 24px; height: 24px; background: var(--terminal-green); color: var(--terminal-black); border-radius: 50%; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">
                                         ${token.symbol.charAt(0)}
                                     </div>
                                 </div>

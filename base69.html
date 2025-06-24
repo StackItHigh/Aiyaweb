@@ -44,7 +44,7 @@
                 <p class="signals-subtitle">
                     > Scanning Base dimension for signals...<br>
                     > Analyzing memecoin frequency patterns...<br>
-                    > The  Base69 tokens emerge <br>
+                    > The Base69 tokens emerge <br>
                     > Updated every 30 seconds by the Oracle
                 </p>
                 <div class="signals-stats">
@@ -90,13 +90,13 @@
                     <div class="table-header">
                         <div class="col-rank">#</div>
                         <div class="col-token">Token</div>
-                        <div class="col-price">Price</div>
-                        <div class="col-change1h">1h</div>
-                        <div class="col-change6h">6h</div>
-                        <div class="col-change24h">24h</div>
-                        <div class="col-volume">Volume</div>
+                        <div class="col-price">Price USD</div>
+                        <div class="col-change1h">1h %</div>
+                        <div class="col-change6h">6h %</div>
+                        <div class="col-change24h">24h %</div>
+                        <div class="col-volume">Volume 24h</div>
+                        <div class="col-marketcap">Market Cap</div>
                         <div class="col-signal">Signal</div>
-                        <div class="col-score">Score</div>
                     </div>
                     <div class="table-body" id="leaderboardBody">
                         <!-- Loading placeholder -->
@@ -232,6 +232,13 @@
             return `$${num?.toFixed(4) || '0'}`;
         }
 
+        function formatPrice(price) {
+            if (price < 0.000001) return `$${price.toExponential(2)}`;
+            if (price < 0.01) return `$${price.toFixed(6)}`;
+            if (price < 1) return `$${price.toFixed(4)}`;
+            return `$${price.toFixed(2)}`;
+        }
+
         function getSignalIcon(change) {
             if (change > 15) return '🟢';
             if (change > 8) return '🟢';
@@ -280,6 +287,8 @@
                 if (!response.ok) throw new Error('Failed to fetch');
                 
                 const data = await response.json();
+                console.log('API Response:', data); // Debug log
+                console.log('Number of tokens received:', data.tokens?.length); // Debug log
                 return data.tokens || [];
             } catch (error) {
                 console.error('Leaderboard fetch error:', error);
@@ -314,8 +323,15 @@
             // Update stats
             calculateStats(tokens);
             
-            // Limit to exactly 69 tokens
-            tbody.innerHTML = tokens.slice(0, 69).map((token, index) => {
+            console.log('Displaying tokens:', tokens.length); // Debug log
+            
+            // Display exactly 69 tokens (or all available if less than 69)
+            const tokensToShow = tokens.slice(0, 69);
+            console.log('Tokens to show:', tokensToShow.length); // Debug log
+            
+            tbody.innerHTML = tokensToShow.map((token, index) => {
+                const marketCap = (token.price || 0) * (token.totalSupply || 1000000000); // Estimate if not provided
+                
                 return `
                 <div class="table-row">
                     <div class="col-rank">${index + 1}</div>
@@ -340,7 +356,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-price">${formatNumber(parseFloat(token.price) || 0)}</div>
+                    <div class="col-price">${formatPrice(parseFloat(token.price) || 0)}</div>
                     <div class="col-change1h ${(token.change1h || 0) >= 0 ? 'positive' : 'negative'}">
                         ${(token.change1h || 0) >= 0 ? '+' : ''}${(token.change1h || 0).toFixed(1)}%
                     </div>
@@ -351,12 +367,12 @@
                         ${(token.change24h || 0) >= 0 ? '+' : ''}${(token.change24h || 0).toFixed(1)}%
                     </div>
                     <div class="col-volume">${formatNumber(token.volume || 0)}</div>
+                    <div class="col-marketcap">${formatNumber(marketCap)}</div>
                     <div class="col-signal">
                         <span class="signal-badge ${getSignalText(token.change24h || 0).toLowerCase().replace(' ', '-')}">
                             ${getSignalIcon(token.change24h || 0)} ${getSignalText(token.change24h || 0)}
                         </span>
                     </div>
-                    <div class="col-score">${(token.score || 0).toFixed(1)}</div>
                 </div>
             `;}).join('');
         }
@@ -402,7 +418,7 @@
     </script>
 
     <style>
-        /* Additional styles for the standalone page */
+        /* Additional styles for DEXScreener-inspired layout */
         .signals-hero {
             background: 
                 linear-gradient(135deg, rgba(0, 82, 255, 0.1) 0%, rgba(0, 0, 0, 0.9) 50%, rgba(0, 230, 0, 0.1) 100%);
@@ -486,18 +502,26 @@
             box-shadow: 0 0 10px var(--terminal-green);
         }
 
-        .col-score {
-            text-align: center;
+        .col-marketcap {
+            text-align: right;
             font-weight: bold;
-            color: var(--terminal-green);
+            color: var(--terminal-white);
         }
 
+        /* DEXScreener-inspired table layout */
         .table-header {
-            grid-template-columns: 40px 1fr 80px 60px 60px 60px 80px 100px 60px;
+            grid-template-columns: 40px 2fr 120px 80px 80px 80px 120px 120px 120px;
+            font-size: 11px;
+            font-weight: 600;
         }
 
         .table-row {
-            grid-template-columns: 40px 1fr 80px 60px 60px 60px 80px 100px 60px;
+            grid-template-columns: 40px 2fr 120px 80px 80px 80px 120px 120px 120px;
+            font-size: 12px;
+        }
+
+        .table-row:nth-child(even) {
+            background: rgba(0, 230, 0, 0.02);
         }
 
         .signal-legend {
@@ -564,15 +588,27 @@
             }
             
             .table-header, .table-row {
-                grid-template-columns: 30px 1fr 60px 45px 45px 45px;
+                grid-template-columns: 30px 1fr 80px 60px 60px;
+                font-size: 10px;
             }
             
-            .col-volume, .col-signal, .col-score {
+            .col-change6h, .col-volume, .col-marketcap, .col-signal {
                 display: none;
             }
             
             .legend-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .table-header, .table-row {
+                grid-template-columns: 25px 1fr 70px 50px;
+                font-size: 9px;
+            }
+            
+            .col-change1h, .col-change6h, .col-volume, .col-marketcap, .col-signal {
+                display: none;
             }
         }
     </style>

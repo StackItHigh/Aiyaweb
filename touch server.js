@@ -1,48 +1,55 @@
-// Enhanced market data fetch
+// Enhanced market data fetch with error handling
 async function getMarketData() {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true');
+    if (!response.ok) return null;
+    
     const data = await response.json();
     return {
       btc: {
-        price: data.bitcoin.usd,
-        change: data.bitcoin.usd_24h_change,
-        mcap: data.bitcoin.usd_market_cap,
-        volume: data.bitcoin.usd_24h_vol
+        price: parseFloat(data.bitcoin?.usd) || 0,
+        change: parseFloat(data.bitcoin?.usd_24h_change) || 0,
+        mcap: parseFloat(data.bitcoin?.usd_market_cap) || 0,
+        volume: parseFloat(data.bitcoin?.usd_24h_vol) || 0
       },
       eth: {
-        price: data.ethereum.usd,
-        change: data.ethereum.usd_24h_change,
-        mcap: data.ethereum.usd_market_cap,
-        volume: data.ethereum.usd_24h_vol
+        price: parseFloat(data.ethereum?.usd) || 0,
+        change: parseFloat(data.ethereum?.usd_24h_change) || 0,
+        mcap: parseFloat(data.ethereum?.usd_market_cap) || 0,
+        volume: parseFloat(data.ethereum?.usd_24h_vol) || 0
       }
     };
   } catch (error) {
+    console.error('Market data error:', error);
     return null;
   }
 }
 
-// Enhanced token search with better Base chain support
+// Enhanced token search with better error handling
 async function searchToken(query) {
   try {
     const response = await fetch(`https://api.dexscreener.com/latest/dex/search/?q=${query}`);
+    if (!response.ok) return null;
+    
     const data = await response.json();
     if (data.pairs?.[0]) {
       const p = data.pairs[0];
       return {
-        name: p.baseToken.name,
-        symbol: p.baseToken.symbol,
-        price: p.priceUsd,
-        change_24h: p.priceChange.h24,
-        change_1h: p.priceChange.h1,
-        mcap: p.fdv || p.marketCap,
-        volume: p.volume.h24,
-        chain: p.chainId,
-        dex: p.dexId,
-        liquidity: p.liquidity?.usd
+        name: p.baseToken?.name || 'Unknown',
+        symbol: p.baseToken?.symbol || query.toUpperCase(),
+        price: parseFloat(p.priceUsd) || 0,
+        change_24h: parseFloat(p.priceChange?.h24) || 0,
+        change_1h: parseFloat(p.priceChange?.h1) || null,
+        mcap: parseFloat(p.fdv || p.marketCap) || 0,
+        volume: parseFloat(p.volume?.h24) || 0,
+        chain: p.chainId || 'unknown',
+        dex: p.dexId || 'unknown',
+        liquidity: parseFloat(p.liquidity?.usd) || 0
       };
     }
+    return null;
   } catch (error) {
+    console.error('Token search error:', error);
     return null;
   }
 }

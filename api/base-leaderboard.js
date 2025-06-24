@@ -14,31 +14,26 @@ async function getBaseBuySignals() {
       const price = parseFloat(pool.attributes.base_token_price_usd) || 0;
       const tokenAddress = pool.relationships?.base_token?.data?.id?.split('_')[1] || '';
       
-      // Multiple logo source strategies
+      // Simplified logo strategy - use reliable sources only
       let logoUrl = null;
       
-      // Method 1: Direct from GeckoTerminal (best quality when available)
-      if (pool.attributes.base_token_image_url) {
+      // Method 1: Direct from GeckoTerminal (when available)
+      if (pool.attributes.base_token_image_url && pool.attributes.base_token_image_url.startsWith('http')) {
         logoUrl = pool.attributes.base_token_image_url;
       }
-      // Method 2: CoinGecko proxy (works for many tokens)
-      else if (tokenAddress && tokenAddress.length === 42) {
-        logoUrl = `https://assets.coingecko.com/coins/images/token_logo/${tokenAddress.toLowerCase()}.png`;
-      }
       
-      // Method 3: Alternative sources for popular Base tokens
-      const popularLogos = {
-        'BRETT': 'https://assets.coingecko.com/coins/images/30148/standard/brett.png',
-        'DEGEN': 'https://assets.coingecko.com/coins/images/34515/standard/degen.png',
-        'TOSHI': 'https://assets.coingecko.com/coins/images/33758/standard/toshi.png',
-        'HIGHER': 'https://assets.coingecko.com/coins/images/35024/standard/higher.jpg',
-        'BASED': 'https://assets.coingecko.com/coins/images/35736/standard/photo_2024-02-29_12-47-07.jpg',
-        'MFER': 'https://assets.coingecko.com/coins/images/23699/standard/mfer.png',
-        'NORMIE': 'https://assets.coingecko.com/coins/images/35850/standard/normie.jpg'
+      // Method 2: Hardcoded reliable logos for popular Base tokens
+      const knownLogos = {
+        'BRETT': 'https://dd.dexscreener.com/ds-data/tokens/base/0x532f27101965dd16442e59d40670faf5ebb142e4.png',
+        'DEGEN': 'https://dd.dexscreener.com/ds-data/tokens/base/0x4ed4e862860bed51a9570b96d89af5e1b0efefed.png',
+        'TOSHI': 'https://dd.dexscreener.com/ds-data/tokens/base/0xac1bd2486aaf3b5c0fc3fd868558b082a531b2b4.png',
+        'HIGHER': 'https://dd.dexscreener.com/ds-data/tokens/base/0x0578d8a44db98b23bf096a382e016e29a5ce0ffe.png',
+        'MFER': 'https://dd.dexscreener.com/ds-data/tokens/base/0x2169df818b74b2b1c1af9ad72c8bdedbeab7b9b7.png',
+        'BASED': 'https://dd.dexscreener.com/ds-data/tokens/base/0x44971abf0251958492fee97da3e5c5ada88b9185.png'
       };
       
-      if (!logoUrl && popularLogos[symbol.toUpperCase()]) {
-        logoUrl = popularLogos[symbol.toUpperCase()];
+      if (!logoUrl && knownLogos[symbol.toUpperCase()]) {
+        logoUrl = knownLogos[symbol.toUpperCase()];
       }
       
       // Generate buy signal score

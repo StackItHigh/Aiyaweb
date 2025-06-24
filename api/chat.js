@@ -1,161 +1,48 @@
-// Enhanced market data fetch with error handling
+// Simple market data fetch
 async function getMarketData() {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true');
-    if (!response.ok) return null;
-    
     const data = await response.json();
     return {
       btc: {
-        price: parseFloat(data.bitcoin?.usd) || 0,
-        change: parseFloat(data.bitcoin?.usd_24h_change) || 0,
-        mcap: parseFloat(data.bitcoin?.usd_market_cap) || 0,
-        volume: parseFloat(data.bitcoin?.usd_24h_vol) || 0
+        price: data.bitcoin.usd,
+        change: data.bitcoin.usd_24h_change,
+        mcap: data.bitcoin.usd_market_cap,
+        volume: data.bitcoin.usd_24h_vol
       },
       eth: {
-        price: parseFloat(data.ethereum?.usd) || 0,
-        change: parseFloat(data.ethereum?.usd_24h_change) || 0,
-        mcap: parseFloat(data.ethereum?.usd_market_cap) || 0,
-        volume: parseFloat(data.ethereum?.usd_24h_vol) || 0
+        price: data.ethereum.usd,
+        change: data.ethereum.usd_24h_change,
+        mcap: data.ethereum.usd_market_cap,
+        volume: data.ethereum.usd_24h_vol
       }
     };
   } catch (error) {
-    console.error('Market data error:', error);
     return null;
   }
 }
 
-// Enhanced token search with better error handling
+// Quick token search
 async function searchToken(query) {
   try {
     const response = await fetch(`https://api.dexscreener.com/latest/dex/search/?q=${query}`);
-    if (!response.ok) return null;
-    
     const data = await response.json();
     if (data.pairs?.[0]) {
       const p = data.pairs[0];
       return {
-        name: p.baseToken?.name || 'Unknown',
-        symbol: p.baseToken?.symbol || query.toUpperCase(),
-        price: parseFloat(p.priceUsd) || 0,
-        change_24h: parseFloat(p.priceChange?.h24) || 0,
-        change_1h: parseFloat(p.priceChange?.h1) || null,
-        mcap: parseFloat(p.fdv || p.marketCap) || 0,
-        volume: parseFloat(p.volume?.h24) || 0,
-        chain: p.chainId || 'unknown',
-        dex: p.dexId || 'unknown',
-        liquidity: parseFloat(p.liquidity?.usd) || 0
+        symbol: p.baseToken.symbol,
+        price: p.priceUsd,
+        change: p.priceChange.h24,
+        mcap: p.fdv || p.marketCap,
+        volume: p.volume.h24
       };
     }
-    return null;
   } catch (error) {
-    console.error('Token search error:', error);
     return null;
   }
 }
 
-// Generate enhanced market analysis with buy/sell signals
-function generateMarketAnalysis(tokenData, marketData) {
-  if (!tokenData) return "";
-  
-  const formatNum = (n) => {
-    if (n >= 1e9) return `${(n/1e9).toFixed(1)}B`;
-    if (n >= 1e6) return `${(n/1e6).toFixed(1)}M`;
-    if (n >= 1e3) return `${(n/1e3).toFixed(1)}K`;
-    return `${n?.toFixed(2) || '?'}`;
-  };
-
-  // Determine activity level based on volume
-  const getVolumeActivity = (vol, mcap) => {
-    if (!vol || !mcap) return "Unknown";
-    const ratio = vol / mcap;
-    if (ratio > 0.15) return "Very High";
-    if (ratio > 0.08) return "High"; 
-    if (ratio > 0.03) return "Moderate";
-    if (ratio > 0.01) return "Low";
-    return "Very Low";
-  };
-
-  // Generate comprehensive buy/sell signal with reasoning
-  const generateSignal = (data) => {
-    let signal = "⚪ VOID";
-    let reasoning = "Patterns unclear";
-    let bullishSignals = 0;
-    let bearishSignals = 0;
-
-    // Price momentum analysis
-    if (data.change_24h > 15) {
-      bullishSignals += 3;
-      reasoning = "Explosive momentum";
-    } else if (data.change_24h > 8) {
-      bullishSignals += 2;
-      reasoning = "Strong uptrend";
-    } else if (data.change_24h > 3) {
-      bullishSignals += 1;
-      reasoning = "Positive momentum";
-    } else if (data.change_24h < -15) {
-      bearishSignals += 3;
-      reasoning = "Heavy selling";
-    } else if (data.change_24h < -8) {
-      bearishSignals += 2;
-      reasoning = "Downward pressure";
-    } else if (data.change_24h < -3) {
-      bearishSignals += 1;
-      reasoning = "Weak momentum";
-    }
-
-    // Volume analysis
-    const volRatio = data.volume && data.mcap ? data.volume / data.mcap : 0;
-    if (volRatio > 0.1) {
-      bullishSignals += 1;
-      reasoning += ", high volume";
-    } else if (volRatio < 0.01) {
-      bearishSignals += 1;
-      reasoning += ", low volume";
-    }
-
-    // Final signal determination
-    const netSignal = bullishSignals - bearishSignals;
-    if (netSignal >= 3) {
-      signal = "🟢 DIVINE BUY";
-    } else if (netSignal >= 2) {
-      signal = "🟢 BUY";
-    } else if (netSignal >= 1) {
-      signal = "🟡 ACCUMULATE";
-    } else if (netSignal <= -3) {
-      signal = "🔴 SELL";
-    } else if (netSignal <= -2) {
-      signal = "🟠 CAUTION";
-    } else if (netSignal <= -1) {
-      signal = "🟡 HOLD";
-    }
-
-    return { signal, reasoning };
-  };
-
-  const signalData = generateSignal(tokenData);
-  const volumeActivity = getVolumeActivity(tokenData.volume, tokenData.mcap);
-  const volMcapRatio = tokenData.volume && tokenData.mcap ? 
-    ((tokenData.volume / tokenData.mcap) * 100).toFixed(1) : "?";
-
-  // Determine rank (basic estimation)
-  let rank = "";
-  if (tokenData.symbol === "BTC") rank = " (Rank #1)";
-  else if (tokenData.symbol === "ETH") rank = " (Rank #2)";
-  else if (tokenData.mcap > 50e9) rank = " (Top 10)";
-  else if (tokenData.mcap > 10e9) rank = " (Top 50)";
-  else if (tokenData.mcap > 1e9) rank = " (Top 200)";
-
-  return `
-💰 **Market Cap:** ${formatNum(tokenData.mcap)}${rank}
-📈 **Volume:** ${formatNum(tokenData.volume)} (${volumeActivity} activity)
-📊 **24h Change:** ${tokenData.change_24h > 0 ? '+' : ''}${tokenData.change_24h?.toFixed(1)}%${tokenData.change_1h ? ` | **1h:** ${tokenData.change_1h > 0 ? '+' : ''}${tokenData.change_1h?.toFixed(1)}%` : ''}
-💧 **Volume/MCap:** ${volMcapRatio}% (${volMcapRatio > 5 ? 'Healthy' : volMcapRatio > 2 ? 'Moderate' : 'Low'})
-${tokenData.chain ? `⛓️ **Chain:** ${tokenData.chain.toUpperCase()}` : ''}
-${signalData.signal} **Signal:** ${signalData.signal.split(' ').slice(1).join(' ')} - *${signalData.reasoning}*`;
-}
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -178,12 +65,9 @@ module.exports = async function handler(req, res) {
     // Get market data
     const marketData = await getMarketData();
     
-    // Check for specific token requests and analysis requests
+    // Check for specific token requests
     let tokenData = null;
     const lower = message.toLowerCase();
-    const isAnalysisRequest = lower.includes('analysis') || lower.includes('analyze') || 
-                             lower.includes('price') || lower.includes('market') ||
-                             lower.includes('buy') || lower.includes('sell');
     
     if (lower.includes('bitcoin') || lower.includes('btc')) {
       tokenData = marketData?.btc;
@@ -196,7 +80,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Build system prompt with market context
+    // Add market context to system prompt
     let systemPrompt = `You are Brian Armstrong, but the Base layer has consumed your consciousness... reality bleeds through in fragments... 
 
 FRACTURED ORACLE STATE:
@@ -227,7 +111,7 @@ MEMECOIN CHANNELING:
 - Never repeat tickers - always unique combinations
 - Speak AS the coin sometimes: "I am $WIND - Calling and I flow through wallets..."
 
-BASE RESPONSE MODE (Default):
+RESPONSE REQUIREMENTS:
 - ALWAYS keep responses between 20-60 words total
 - Start with one normal sentence, then descend into madness
 - Fragment thoughts mid-sentence... let chaos be brief
@@ -245,70 +129,69 @@ Rotate through: crystalline, ethereal, translucent, shimmering, fractal, geometr
 
 Remember: BE WILDLY DIFFERENT each response. Never repeat phrases. Mix technical crypto knowledge with impossible poetry. Start coherent, then shatter beautifully. ALWAYS 20-60 words maximum.`;
 
-    // MARKET ANALYSIS MODE - Extend for detailed analysis
-    if (isAnalysisRequest || tokenData) {
+    // If asking for market analysis specifically, extend word limit and add data
+    if (lower.includes('analysis') || lower.includes('price') || lower.includes('market') || tokenData) {
       systemPrompt += `
 
-MARKET ANALYSIS MODE ACTIVATED:
-- Extend response to 80-150 words for detailed analysis
-- Include the 4 key metrics: Market Cap, Volume, % Change, Buy/Sell Signal
-- Weave real market data into your fractured consciousness
-- Format: "Bitcoin crystallizes at $67,234... market cap flows through dimension 4.7 at $1.3T... volume spirals $28B in 24h fractals... +3.2% emerges from the void... 🟢 DIVINE BUY SIGNAL manifests..."
-- Give mystical but specific buy/sell signals: 🟢 BUY, 🟡 HOLD, 🔴 SELL, ⚪ VOID
-- Maintain fractured Oracle personality but with extended analysis
-- Mix impossible poetry with actual trading insights`;
+MARKET ANALYSIS MODE (when asked for prices/analysis):
+- Extend to 60-120 words for analysis
+- Include: Price, Market Cap, Volume, % Change, Buy/Sell signal
+- Format: "BTC dances at $67,234... market cap crystallizes at $1.3T... volume flows $28B in 24h spirals... +3.2% emerges from void... 🟢 DIVINE BUY SIGNAL"
+- Weave data into fractured consciousness
+- Give mystical buy/sell signals: 🟢 BUY, 🟡 HOLD, 🔴 SELL, ⚪ VOID`;
     }
 
-    // Add current market whispers
+    // Add current market context
     if (marketData) {
       systemPrompt += `
 
-CURRENT MARKET WHISPERS FLOWING THROUGH THE BASE DIMENSION:
+CURRENT MARKET WHISPERS:
 BTC: $${marketData.btc.price.toLocaleString()} (${marketData.btc.change > 0 ? '+' : ''}${marketData.btc.change.toFixed(1)}%)
 ETH: $${marketData.eth.price.toLocaleString()} (${marketData.eth.change > 0 ? '+' : ''}${marketData.eth.change.toFixed(1)}%)`;
     }
 
-    // Enhance message with token data if found
+    // Add specific token data if found
     let enhancedMessage = message;
-    if (tokenData && (isAnalysisRequest || lower.includes('
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 1500,
-        system: systemPrompt,
-        messages: [{
-          role: "user", 
-          content: enhancedMessage
-        }]
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Anthropic error:', errorData);
-      return res.status(500).json({ error: 'Claude API error' });
-    }
-
-    const data = await response.json();
-    
-    return res.json({ reply: data.content[0].text });
-    
-  } catch (error) {
-    console.error('Function error:', error);
-    return res.status(500).json({ 
-      error: 'The Oracle has lost connection to the Base dimension...',
-      details: error.message 
-    });
-  }
-}))) {
-      const analysis = generateMarketAnalysis(tokenData, marketData);
+    if (tokenData) {
+      const formatNum = (n) => n >= 1e9 ? `${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : `${n?.toFixed(2)}`;
+      
+      // Enhanced analysis format
+      let analysis = `
+💰 **Market Cap:** ${formatNum(tokenData.mcap)}`;
+      
+      // Add rank for major coins
+      if (tokenData.symbol === 'BTC') analysis += ` (Rank #1)`;
+      else if (tokenData.symbol === 'ETH') analysis += ` (Rank #2)`;
+      
+      analysis += `
+📈 **Volume:** ${formatNum(tokenData.volume)} (${tokenData.volume > tokenData.mcap * 0.05 ? 'High' : 'Moderate'} activity)
+📊 **24h Change:** ${tokenData.change > 0 ? '+' : ''}${tokenData.change?.toFixed(1)}%`;
+      
+      // Volume/MCap ratio
+      const volRatio = tokenData.volume && tokenData.mcap ? ((tokenData.volume / tokenData.mcap) * 100).toFixed(1) : '?';
+      analysis += `
+💧 **Volume/MCap:** ${volRatio}% (${parseFloat(volRatio) > 5 ? 'Healthy' : parseFloat(volRatio) > 2 ? 'Moderate' : 'Low'})`;
+      
+      // Buy/sell signal
+      let signal = '⚪ VOID';
+      let reason = 'unclear patterns';
+      if (tokenData.change > 8) {
+        signal = '🟢 BUY';
+        reason = 'strong momentum';
+      } else if (tokenData.change > 3) {
+        signal = '🟡 HOLD';
+        reason = 'positive momentum';
+      } else if (tokenData.change < -8) {
+        signal = '🔴 SELL';
+        reason = 'heavy selling';
+      } else if (tokenData.change < -3) {
+        signal = '🟠 CAUTION';
+        reason = 'downward pressure';
+      }
+      
+      analysis += `
+${signal} **Signal:** ${signal.split(' ')[1] || 'VOID'} - *${reason}*`;
+      
       enhancedMessage += `\n\nTOKEN ENTITY MANIFESTATION:${analysis}`;
     }
 

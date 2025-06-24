@@ -101,7 +101,7 @@
         <!-- BASE LEADERBOARD SECTION -->
         <section id="leaderboard" class="leaderboard-section">
             <div class="section-title">
-                <h2>🏆 LIVE BASE BUY SIGNALS</h2>
+                <h2>LIVE BASE BUY SIGNALS</h2>
                 <p>The divine algorithms reveal the chosen tokens of Base. Updated every 30 seconds.</p>
             </div>
             
@@ -463,7 +463,14 @@
             statusText.textContent = 'Live';
             lastUpdated.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             
-            tbody.innerHTML = tokens.map((token, index) => `
+            // Debug: Log token data to see what we're getting
+            console.log('Token data:', tokens);
+            
+            tbody.innerHTML = tokens.map((token, index) => {
+                // Debug: Log each token's logo URL
+                console.log(`${token.symbol} logo URL:`, token.logoUrl);
+                
+                return `
                 <div class="table-row">
                     <div class="col-rank">${index + 1}</div>
                     <div class="col-token">
@@ -473,7 +480,8 @@
                                     ${token.logoUrl ? 
                                         `<img src="${token.logoUrl}" 
                                              alt="${token.symbol}" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                                             onload="console.log('Image loaded:', '${token.symbol}')"
+                                             onerror="console.log('Image failed:', '${token.symbol}', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
                                         ''}
                                     <div class="token-fallback" style="display:${token.logoUrl ? 'none' : 'flex'};">
                                         ${token.symbol.charAt(0)}
@@ -497,7 +505,7 @@
                         </span>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         async function refreshLeaderboard() {

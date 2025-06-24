@@ -1013,9 +1013,9 @@ footer {
 
 .token-logo {
     position: relative;
-    width: 42px;
-    height: 42px;
-    border-radius: 0px;
+    width: 38px;
+    height: 38px;
+    border-radius: 4px;
     overflow: hidden;
     background: rgba(0, 230, 0, 0.1);
     border: 1px solid var(--terminal-green);
@@ -1068,7 +1068,7 @@ footer {
 }
 
 .signal-badge {
-    padding: 12px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
     font-size: 10px;
     font-weight: bold;

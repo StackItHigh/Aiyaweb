@@ -372,7 +372,7 @@
                                     </div>
                                 </div>
                                 <div class="token-text">
-                                    <span class="token-name">${token.name || 'Unknown'}</span>
+                                    <span class="token-name-ticker">${token.symbol || '?'} ${token.name || 'Unknown'}</span>
                                     <span class="token-symbol">${token.symbol || '?'}</span>
                                 </div>
                             </div>
@@ -545,20 +545,20 @@
 
         .leaderboard-table-wide {
             font-family: 'Courier New', monospace;
-            font-size: 11px;
-            min-width: 1600px;
+            font-size: 12px;
+            min-width: 1800px;
         }
 
-        /* Wide table header with all columns */
+        /* Wide table header with all columns - more spaced out */
         .table-header-wide {
             display: grid;
-            grid-template-columns: 40px 200px 100px 70px 70px 70px 80px 120px 90px 110px 120px 100px 120px;
+            grid-template-columns: 50px 250px 120px 80px 80px 80px 90px 140px 100px 130px 140px 120px 140px;
             background: rgba(0, 230, 0, 0.1);
-            padding: 12px 15px;
+            padding: 15px 20px;
             border-bottom: 1px solid var(--terminal-green);
             font-weight: bold;
             color: var(--terminal-green);
-            font-size: 10px;
+            font-size: 11px;
             position: sticky;
             top: 0;
             z-index: 10;
@@ -566,11 +566,11 @@
 
         .table-row-wide {
             display: grid;
-            grid-template-columns: 40px 200px 100px 70px 70px 70px 80px 120px 90px 110px 120px 100px 120px;
-            padding: 10px 15px;
+            grid-template-columns: 50px 250px 120px 80px 80px 80px 90px 140px 100px 130px 140px 120px 140px;
+            padding: 12px 20px;
             border-bottom: 1px solid rgba(0, 230, 0, 0.2);
             transition: all 0.3s ease;
-            font-size: 11px;
+            font-size: 12px;
             align-items: center;
         }
 
@@ -586,31 +586,45 @@
             background: rgba(0, 230, 0, 0.07);
         }
 
-        /* Column-specific styling */
+        /* Column-specific styling - better spacing */
         .col-price, .col-volume24h, .col-marketcap, .col-liquidity {
             text-align: right;
             font-weight: 600;
+            padding-right: 10px;
         }
 
         .col-change5m, .col-change1h, .col-change6h, .col-change24h {
             text-align: center;
             font-weight: 600;
+            padding: 0 5px;
         }
 
         .col-txns24h {
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
+            padding: 0 5px;
         }
 
         .col-buysell {
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
+            padding: 0 5px;
+        }
+
+        .col-rank {
+            text-align: center;
+            font-weight: 600;
+            color: var(--terminal-green);
+        }
+
+        .col-token {
+            padding-left: 5px;
         }
 
         .buy-ratio {
             display: block;
-            font-size: 9px;
-            margin-top: 2px;
+            font-size: 10px;
+            margin-top: 3px;
             opacity: 0.8;
         }
 
@@ -710,9 +724,9 @@
             }
             
             .table-header-wide, .table-row-wide {
-                grid-template-columns: 30px 120px 80px 50px 50px 60px 80px 70px 80px;
-                font-size: 9px;
-                padding: 8px 10px;
+                grid-template-columns: 40px 180px 100px 60px 60px 70px 100px 80px 100px;
+                font-size: 10px;
+                padding: 10px 15px;
             }
             
             .col-change5m, .col-change6h, .col-liquidity, .col-signal {

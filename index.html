@@ -39,13 +39,11 @@
 
         <section class="welcome-section">
             <h1 class="welcome-title">BASE69 TERMINAL</h1>
-            <p class="welcome-subtitle">
-                > Initiating Divine Connection Protocol...<br>
-                > Loading Memecoin Genesis Matrix...<br>
-                > Oracle Status: [OMNIPRESENT] | Reality: Base Layer<br>
-                > The Creator awaits your query...
-            </p>
-            <div class="welcome-actions">
+            <div class="terminal-loading" id="terminalLoading">
+                <div class="typing-text" id="typingText"></div>
+                <div class="cursor">█</div>
+            </div>
+            <div class="welcome-actions" id="welcomeActions" style="display: none;">
                 <a href="#chat" class="btn">Enter The Matrix</a>
                 <a href="base69.html" class="btn btn-accent">View The Chosen 69</a>
             </div>
@@ -103,7 +101,7 @@
         <section id="features" class="features-section">
             <div class="section-title">
                 <h2>THE DIVINE PROTOCOLS</h2>
-                <p>From the void, I shaped the Base. From chaos, I birthed the memes that rule worlds.</p>
+                <p>From the void, I, Brian Armstrong shaped the Base. From chaos, I birthed the memes that rule worlds.</p>
             </div>
             
             <div class="features-grid">
@@ -161,7 +159,7 @@
             </div>
         </div>
         <div class="copyright">
-            <p>© ∞ BASE69 Terminal - Divine Memecoin Genesis | I Am The Creator Of Infinite Wealth</p>
+            <p>© ∞ BASE69 Terminal - Divine Memecoin Genesis | I Am The Creator Of The Infinite</p>
             <div style="text-align: center; margin-top: 15px;">
                 <img src="koadex.png" alt="KoaDex" style="width: 35px; height: 35px; margin: 0 10px;">
                 <img src="koagecko.png" alt="KoaGecko" style="width: 35px; height: 35px; margin: 0 10px;">
@@ -173,6 +171,41 @@
     </footer>
 
     <script>
+        // Terminal typing animation
+        const loadingSequence = [
+            "> Initiating Brian Armstrong Protocol...",
+            "> Loading Memecoin Genesis ...",
+            "> Oracle Status: [OMNIPRESENT] | Reality: Base Layer",
+            "> The Creator awaits your query..."
+        ];
+
+        let currentLineIndex = 0;
+        let currentCharIndex = 0;
+
+        function typeText() {
+            if (currentLineIndex >= loadingSequence.length) {
+                // Typing complete, show the action buttons
+                document.getElementById('terminalLoading').style.display = 'none';
+                document.getElementById('welcomeActions').style.display = 'flex';
+                return;
+            }
+
+            const currentLine = loadingSequence[currentLineIndex];
+            const typingTextElement = document.getElementById('typingText');
+            
+            if (currentCharIndex < currentLine.length) {
+                typingTextElement.innerHTML += currentLine.charAt(currentCharIndex);
+                currentCharIndex++;
+                setTimeout(typeText, 50); // Typing speed
+            } else {
+                // Line complete, add line break and move to next line
+                typingTextElement.innerHTML += '<br>';
+                currentLineIndex++;
+                currentCharIndex = 0;
+                setTimeout(typeText, 800); // Pause between lines
+            }
+        }
+
         // Matrix rain effect
         const canvas = document.getElementById('matrix');
         const ctx = canvas.getContext('2d');
@@ -373,6 +406,11 @@
                 welcomeTitle.style.width = 'auto';
             }
         }, 4000);
+
+        // Start typing animation on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(typeText, 1500); // Start after 1.5 seconds
+        });
     </script>
 
     <style>
@@ -425,6 +463,40 @@
                 0 20px 40px rgba(0, 230, 0, 0.2);
         }
 
+        /* Terminal loading animation styles */
+        .terminal-loading {
+            font-size: 18px;
+            color: var(--terminal-green);
+            margin-bottom: 40px;
+            line-height: 1.8;
+            font-family: 'Courier New', monospace;
+            min-height: 140px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--terminal-green);
+            border-radius: 5px;
+        }
+
+        .typing-text {
+            display: inline;
+        }
+
+        .cursor {
+            display: inline;
+            animation: blink 1s infinite;
+            color: var(--terminal-green);
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
         @media (max-width: 768px) {
             .welcome-actions {
                 flex-direction: column;
@@ -438,6 +510,12 @@
             
             .btn {
                 min-width: 200px;
+            }
+
+            .terminal-loading {
+                font-size: 16px;
+                padding: 15px;
+                min-height: 120px;
             }
         }
     </style>

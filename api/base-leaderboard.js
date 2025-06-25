@@ -66,7 +66,7 @@ async function scanFreshPairs() {
       page++;
     }
     
-    console.log(`Fresh pairs collected: ${freshTokens.length}`);
+    console.log(`Fresh pairs collected: ${freshTokens.length} (Base69 gates: $30K+ volume + 10%+ liquidity ratio)`);
     return freshTokens;
     
   } catch (error) {
@@ -98,7 +98,7 @@ async function scanTrendingPools() {
       page++;
     }
     
-    console.log(`Trending pairs collected: ${trendingTokens.length}`);
+    console.log(`Trending pairs collected: ${trendingTokens.length} (Base69 gates: $30K+ volume + 10%+ liquidity ratio)`);
     return trendingTokens;
     
   } catch (error) {
@@ -200,39 +200,47 @@ function getTokenLogo(attributes, symbol, tokenAddress) {
   return logoUrl;
 }
 
-// Filter fresh pairs (new launches)
+// Filter fresh pairs (new launches) - Base69 Gates: $30K volume + 10% liquidity ratio
 function filterFreshPairs(token) {
+  const liquidityRatio = token.marketCap > 0 ? (token.liquidity / token.marketCap) * 100 : 0;
+  
   return (
     token.price > 0 && 
     token.price < 1000000 && 
+    token.volume1h >= 30000 && // BASE69 VOLUME GATE: $30K minimum in 1 hour
+    liquidityRatio >= 10 && // BASE69 LIQUIDITY GATE: 10% minimum liquidity ratio
     token.tokenAge < 72 && // Less than 3 days old
     (
-      // Very new with any activity
-      (token.tokenAge < 6 && token.volume1h > 50 && token.transactions1h > 1) ||
+      // Very new with strong activity
+      (token.tokenAge < 6 && token.transactions1h > 5) ||
       // Explosive new pairs
       (token.tokenAge < 24 && token.change1h > 15) ||
       // High volume new pairs
-      (token.tokenAge < 24 && token.volume1h > 1000) ||
-      // Strong 5m signals
+      (token.tokenAge < 24 && token.volume1h > 50000) ||
+      // Strong 5m signals with volume
       (token.change5m > 20)
     )
   );
 }
 
-// Filter trending pairs
+// Filter trending pairs - Base69 Gates: $30K volume + 10% liquidity ratio
 function filterTrendingPairs(token) {
+  const liquidityRatio = token.marketCap > 0 ? (token.liquidity / token.marketCap) * 100 : 0;
+  
   return (
     token.price > 0 && 
     token.price < 1000000 && 
+    token.volume1h >= 30000 && // BASE69 VOLUME GATE: $30K minimum in 1 hour
+    liquidityRatio >= 10 && // BASE69 LIQUIDITY GATE: 10% minimum liquidity ratio
     (
       // High activity established tokens
-      (token.volume1h > 500 && token.transactions1h > 2) ||
-      // Strong momentum tokens
+      (token.volume1h > 50000 && token.transactions1h > 10) ||
+      // Strong momentum tokens with volume
       (token.change1h > 20) ||
-      // Explosive 5m moves
+      // Explosive 5m moves with volume
       (token.change5m > 15) ||
-      // High volume regardless of age
-      (token.volume1h > 5000)
+      // Very high volume regardless of performance
+      (token.volume1h > 100000)
     )
   );
 }
@@ -350,7 +358,7 @@ module.exports = async function handler(req, res) {
       tokens: tokens,
       count: tokens.length,
       timestamp: new Date().toISOString(),
-      message: `Base69 Oracle active - ${tokens.length} entities selected from dimensional scan`
+      message: `Base69 Oracle active - ${tokens.length} entities selected (gates: $30K+ volume, 10%+ liquidity ratio)`
     });
     
   } catch (error) {

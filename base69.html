@@ -1,4 +1,4 @@
-// Get top Base chain tokens with buy signals (1-hour focused for divine tokens)
+// Get top Base chain tokens with buy signals (1-hour focused for divine tokens + new pairs)
 async function getBaseBuySignals() {
   try {
     let allTokens = [];
@@ -176,7 +176,7 @@ async function getBaseBuySignals() {
         
         // Liquidity scoring (adjusted for new pairs)
         if (liquidity > 1000000) score += 1;
-        else if (liquidity > 100000) score += 0.5; // New tier for new pairs
+        else if (liquidity > 100000) score += 1; // New tier for new pairs
         else if (liquidity < 10000) score -= 1;    // Adjusted threshold
         
         return {

@@ -1,4 +1,4 @@
-// Get top Base chain tokens with buy signals (DEXScreener style)
+// Get top Base chain tokens with buy signals (1-hour focused for divine tokens)
 async function getBaseBuySignals() {
   try {
     let allTokens = [];
@@ -101,53 +101,72 @@ async function getBaseBuySignals() {
           logoUrl = 'https://assets.coingecko.com/coins/images/35738/standard/higher.png';
         }
         
-        // Enhanced buy signal score (DEXScreener style)
+        // UPDATED SCORING: 1-hour focused for divine tokens
         let score = 0;
         
-        // Price change scoring (24h primary)
-        if (change24h > 100) score += 10;
-        else if (change24h > 50) score += 8;
-        else if (change24h > 20) score += 6;
-        else if (change24h > 15) score += 4;
-        else if (change24h > 8) score += 3;
-        else if (change24h > 3) score += 2;
-        else if (change24h > 0) score += 1;
-        else if (change24h < -15) score -= 4;
-        else if (change24h < -8) score -= 2;
-        else if (change24h < -3) score -= 1;
+        // PRIMARY: 1-hour price change scoring (heavily weighted for divine signals)
+        if (change1h > 50) score += 15;        // Explosive 1h growth
+        else if (change1h > 30) score += 12;   // Very strong 1h growth
+        else if (change1h > 20) score += 10;   // Strong 1h growth
+        else if (change1h > 15) score += 8;    // Good 1h growth
+        else if (change1h > 10) score += 6;    // Moderate 1h growth
+        else if (change1h > 5) score += 4;     // Small 1h growth
+        else if (change1h > 0) score += 2;     // Minimal 1h growth
+        else if (change1h < -15) score -= 6;   // Heavy 1h decline
+        else if (change1h < -10) score -= 4;   // Moderate 1h decline
+        else if (change1h < -5) score -= 2;    // Small 1h decline
         
-        // Volume scoring (higher thresholds)
-        if (volume24h > 5000000) score += 4;
-        else if (volume24h > 1000000) score += 3;
-        else if (volume24h > 500000) score += 2;
-        else if (volume24h > 100000) score += 1;
-        else if (volume24h < 10000) score -= 2;
+        // SECONDARY: 1-hour volume scoring (prioritized over 24h)
+        if (volume1h > 500000) score += 6;     // $500K+ in 1h is massive
+        else if (volume1h > 200000) score += 5; // $200K+ in 1h is very strong
+        else if (volume1h > 100000) score += 4; // $100K+ in 1h is strong
+        else if (volume1h > 50000) score += 3;  // $50K+ in 1h is good
+        else if (volume1h > 25000) score += 2;  // $25K+ in 1h is decent
+        else if (volume1h > 10000) score += 1;  // $10K+ in 1h is minimal
+        else if (volume1h < 1000) score -= 3;   // Under $1K in 1h is very low
         
-        // Transaction activity scoring
-        if (transactions24h > 1000) score += 2;
-        else if (transactions24h > 500) score += 1;
-        else if (transactions24h < 50) score -= 1;
+        // 24-hour context (reduced weight but still important)
+        if (change24h > 100) score += 4;      // Reduced from 10
+        else if (change24h > 50) score += 3;   // Reduced from 8
+        else if (change24h > 20) score += 2;   // Reduced from 6
+        else if (change24h > 15) score += 1;   // Reduced from 4
+        else if (change24h < -30) score -= 3;  // Penalize heavy 24h decline
+        else if (change24h < -15) score -= 2;  // Penalize moderate 24h decline
         
-        // Buy/Sell ratio scoring
+        // 24-hour volume (reduced weight)
+        if (volume24h > 5000000) score += 2;   // Reduced from 4
+        else if (volume24h > 1000000) score += 1; // Reduced from 3
+        else if (volume24h < 10000) score -= 1; // Reduced from -2
+        
+        // 1-hour transaction activity (new priority)
+        if (transactions1h > 200) score += 4;  // Very active in last hour
+        else if (transactions1h > 100) score += 3; // Active in last hour
+        else if (transactions1h > 50) score += 2;  // Moderate activity in last hour
+        else if (transactions1h > 20) score += 1;  // Some activity in last hour
+        else if (transactions1h < 5) score -= 2;   // Very low 1h activity
+        
+        // 24-hour transaction activity (reduced weight)
+        if (transactions24h > 1000) score += 1; // Reduced from 2
+        else if (transactions24h < 50) score -= 1; // Same penalty
+        
+        // Buy/Sell ratio scoring (unchanged)
         if (buyPercentage > 70) score += 2;
         else if (buyPercentage > 60) score += 1;
         else if (buyPercentage < 40) score -= 1;
         else if (buyPercentage < 30) score -= 2;
         
-        // Short-term momentum
-        if (change1h > 20) score += 2;
-        else if (change1h > 10) score += 1;
-        else if (change1h < -10) score -= 1;
+        // 6-hour momentum (reduced weight)
+        if (change6h > 30) score += 1;        // Reduced from 2
+        else if (change6h < -15) score -= 1;  // Same penalty
         
-        if (change6h > 30) score += 2;
-        else if (change6h > 15) score += 1;
-        else if (change6h < -15) score -= 1;
+        // 5-minute momentum (boosted for very recent activity)
+        if (change5m > 15) score += 3;        // Increased from 1
+        else if (change5m > 10) score += 2;   // New tier
+        else if (change5m > 5) score += 1;    // New tier
+        else if (change5m < -15) score -= 2;  // Increased penalty
+        else if (change5m < -10) score -= 1;  // Same penalty
         
-        // 5-minute momentum (for very recent activity)
-        if (change5m > 10) score += 1;
-        else if (change5m < -10) score -= 1;
-        
-        // Liquidity scoring
+        // Liquidity scoring (unchanged)
         if (liquidity > 1000000) score += 1;
         else if (liquidity < 50000) score -= 1;
         
@@ -179,12 +198,12 @@ async function getBaseBuySignals() {
         };
       });
       
-      // Filter out tokens with very low activity or extreme prices
+      // Updated filtering: Focus on 1-hour activity
       const filteredTokens = pageTokens.filter(token => 
-        token.volume24h > 1000 && // Minimum $1K volume
+        token.volume1h > 500 &&     // Minimum $500 volume in 1h (more lenient)
         token.price > 0 && 
-        token.price < 1000000 && // Remove extreme prices
-        token.transactions24h > 5 // Minimum transaction activity
+        token.price < 1000000 && 
+        token.transactions1h > 2    // Minimum 2 transactions in 1h (more focused)
       );
       
       allTokens = allTokens.concat(filteredTokens);
@@ -238,7 +257,7 @@ module.exports = async function handler(req, res) {
       tokens: tokens,
       count: tokens.length,
       timestamp: new Date().toISOString(),
-      message: `Base69 dimension signals retrieved - ${tokens.length} sacred tokens`
+      message: `Base69 dimension signals retrieved - ${tokens.length} sacred tokens (1-hour focused)`
     });
     
   } catch (error) {

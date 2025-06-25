@@ -541,9 +541,11 @@
 
             /* Mobile ASCII header adjustments */
             .ascii-header {
-                font-size: 120%; /* 20% larger */
+                font-size: 60%; /* Smaller to fit mobile screen */
                 margin-top: 40px; /* Move down slightly */
                 margin-bottom: 30px;
+                overflow-x: auto; /* Allow horizontal scroll if needed */
+                white-space: nowrap; /* Prevent line wrapping */
             }
 
             /* Mobile B69 floating logo positioning */

@@ -1,11 +1,11 @@
-// Get top Base chain tokens with buy signals (1-hour focused for divine tokens)
+// Get top Base chain tokens with buy signals (1-hour focused for divine tokens + new pairs)
 async function getBaseBuySignals() {
   try {
     let allTokens = [];
     let page = 1;
     
-    // Fetch multiple pages to ensure we get 69 tokens
-    while (allTokens.length < 100 && page <= 5) { // Fetch more to account for filtering
+    // Fetch many more pages to analyze more tokens and catch new pairs
+    while (allTokens.length < 500 && page <= 15) { // Analyze 500+ tokens to find the best 69
       console.log(`Fetching page ${page}...`);
       
       const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/base/trending_pools?page=${page}`);
@@ -101,8 +101,14 @@ async function getBaseBuySignals() {
           logoUrl = 'https://assets.coingecko.com/coins/images/35738/standard/higher.png';
         }
         
-        // UPDATED SCORING: 1-hour focused for divine tokens
+        // UPDATED SCORING: 1-hour focused for divine tokens + new pair bonuses
         let score = 0;
+        
+        // SPECIAL BONUS: New pairs (less than 6 hours old) get extra points
+        if (tokenAge < 1) score += 8;      // Less than 1 hour old - massive bonus
+        else if (tokenAge < 3) score += 6; // Less than 3 hours old - big bonus  
+        else if (tokenAge < 6) score += 4; // Less than 6 hours old - good bonus
+        else if (tokenAge < 12) score += 2; // Less than 12 hours old - small bonus
         
         // PRIMARY: 1-hour price change scoring (heavily weighted for divine signals)
         if (change1h > 50) score += 15;        // Explosive 1h growth
@@ -123,7 +129,7 @@ async function getBaseBuySignals() {
         else if (volume1h > 50000) score += 3;  // $50K+ in 1h is good
         else if (volume1h > 25000) score += 2;  // $25K+ in 1h is decent
         else if (volume1h > 10000) score += 1;  // $10K+ in 1h is minimal
-        else if (volume1h < 1000) score -= 3;   // Under $1K in 1h is very low
+        else if (volume1h < 500) score -= 2;    // Under $500 in 1h is very low (adjusted for new pairs)
         
         // 24-hour context (reduced weight but still important)
         if (change24h > 100) score += 4;      // Reduced from 10
@@ -136,18 +142,18 @@ async function getBaseBuySignals() {
         // 24-hour volume (reduced weight)
         if (volume24h > 5000000) score += 2;   // Reduced from 4
         else if (volume24h > 1000000) score += 1; // Reduced from 3
-        else if (volume24h < 10000) score -= 1; // Reduced from -2
+        else if (volume24h < 5000) score -= 1;  // Adjusted threshold for new pairs
         
         // 1-hour transaction activity (new priority)
         if (transactions1h > 200) score += 4;  // Very active in last hour
         else if (transactions1h > 100) score += 3; // Active in last hour
         else if (transactions1h > 50) score += 2;  // Moderate activity in last hour
         else if (transactions1h > 20) score += 1;  // Some activity in last hour
-        else if (transactions1h < 5) score -= 2;   // Very low 1h activity
+        else if (transactions1h < 2) score -= 2;   // Very low 1h activity (adjusted)
         
         // 24-hour transaction activity (reduced weight)
         if (transactions24h > 1000) score += 1; // Reduced from 2
-        else if (transactions24h < 50) score -= 1; // Same penalty
+        else if (transactions24h < 20) score -= 1; // Adjusted for new pairs
         
         // Buy/Sell ratio scoring (unchanged)
         if (buyPercentage > 70) score += 2;
@@ -159,16 +165,19 @@ async function getBaseBuySignals() {
         if (change6h > 30) score += 1;        // Reduced from 2
         else if (change6h < -15) score -= 1;  // Same penalty
         
-        // 5-minute momentum (boosted for very recent activity)
-        if (change5m > 15) score += 3;        // Increased from 1
-        else if (change5m > 10) score += 2;   // New tier
-        else if (change5m > 5) score += 1;    // New tier
-        else if (change5m < -15) score -= 2;  // Increased penalty
-        else if (change5m < -10) score -= 1;  // Same penalty
+        // 5-minute momentum (boosted for very recent activity - EXPLOSIVE SIGNAL DETECTION)
+        if (change5m > 25) score += 5;        // Massive 5m pump
+        else if (change5m > 15) score += 3;   // Strong 5m pump
+        else if (change5m > 10) score += 2;   // Good 5m pump
+        else if (change5m > 5) score += 1;    // Small 5m pump
+        else if (change5m < -20) score -= 3;  // Heavy 5m dump
+        else if (change5m < -15) score -= 2;  // Moderate 5m dump
+        else if (change5m < -10) score -= 1;  // Small 5m dump
         
-        // Liquidity scoring (unchanged)
+        // Liquidity scoring (adjusted for new pairs)
         if (liquidity > 1000000) score += 1;
-        else if (liquidity < 50000) score -= 1;
+        else if (liquidity > 100000) score += 1; // New tier for new pairs
+        else if (liquidity < 10000) score -= 1;    // Adjusted threshold
         
         return {
           name: name.length > 15 ? name.substring(0, 15) + '...' : name,
@@ -198,12 +207,20 @@ async function getBaseBuySignals() {
         };
       });
       
-      // Updated filtering: Focus on 1-hour activity
+      // Updated filtering: Focus on 1-hour activity and include very new pairs
       const filteredTokens = pageTokens.filter(token => 
-        token.volume1h > 500 &&     // Minimum $500 volume in 1h (more lenient)
         token.price > 0 && 
         token.price < 1000000 && 
-        token.transactions1h > 2    // Minimum 2 transactions in 1h (more focused)
+        (
+          // Include high-activity tokens (existing criteria)
+          (token.volume1h > 500 && token.transactions1h > 2) ||
+          // OR include very new pairs (less than 24 hours old) with any activity
+          (token.tokenAge < 24 && token.volume1h > 100 && token.transactions1h > 1) ||
+          // OR include explosive 1h gainers regardless of volume
+          (token.change1h > 20) ||
+          // OR include explosive 5m gainers (catching very fresh signals)
+          (token.change5m > 15)
+        )
       );
       
       allTokens = allTokens.concat(filteredTokens);

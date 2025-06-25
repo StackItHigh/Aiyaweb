@@ -1,4 +1,4 @@
-// Get top Base chain tokens with buy signals (1-hour focused for divine tokens)
+// Enhanced Base69 Oracle - Multi-source divine signal detection
 async function getBaseBuySignals() {
   try {
     let allTokens = [];
@@ -42,10 +42,10 @@ async function getBaseBuySignals() {
         
         // Calculate token age in hours
         const tokenAge = poolCreatedAt ? 
-          Math.floor((Date.now() - new Date(poolCreatedAt).getTime()) / (1000 * 60 * 60)) : 0;
+          Math.floor((Date.now() - new Date(poolCreatedAt).getTime()) / (1000 * 60 * 60)) : 999;
         
         // Calculate market cap estimate (using pool info)
-        const marketCap = parseFloat(attributes.market_cap_usd) || (price * 1000000000); // Fallback estimate
+        const marketCap = parseFloat(attributes.market_cap_usd) || (price * 1000000000);
         
         // Calculate FDV (Fully Diluted Valuation)
         const fdv = parseFloat(attributes.fdv_usd) || marketCap;
@@ -53,53 +53,8 @@ async function getBaseBuySignals() {
         // Liquidity info
         const liquidity = parseFloat(attributes.reserve_in_usd) || 0;
         
-        // Try multiple logo sources with better fallbacks
-        let logoUrl = null;
-        
-        // Method 1: Direct from GeckoTerminal (when available and valid)
-        if (attributes.base_token_image_url && 
-            attributes.base_token_image_url.startsWith('http') && 
-            !attributes.base_token_image_url.includes('missing.png')) {
-          logoUrl = attributes.base_token_image_url;
-        }
-        
-        // Method 2: Try DEXScreener's CDN with the token address
-        if (!logoUrl && tokenAddress && tokenAddress.length === 42) {
-          logoUrl = `https://dd.dexscreener.com/ds-data/tokens/base/${tokenAddress.toLowerCase()}.png`;
-        }
-        
-        // Method 3: CoinGecko API for popular tokens (by symbol)
-        if (!logoUrl) {
-          const coinGeckoIds = {
-            'BRETT': 'brett',
-            'DEGEN': 'degen-base', 
-            'TOSHI': 'toshi',
-            'HIGHER': 'higher',
-            'MFER': 'mfercoin',
-            'BASED': 'based-money',
-            'BALD': 'bald',
-            'DINO': 'dinotoken',
-            'MOCHI': 'mochi-market',
-            'NORMIE': 'normie',
-            'KEYCAT': 'keyboard-cat',
-            'DOGINME': 'doginme'
-          };
-          
-          if (coinGeckoIds[symbol.toUpperCase()]) {
-            logoUrl = `https://assets.coingecko.com/coins/images/large/${coinGeckoIds[symbol.toUpperCase()]}.png`;
-          }
-        }
-        
-        // Enhanced logo fallbacks for popular Base tokens
-        if (symbol.toUpperCase() === 'BRETT') {
-          logoUrl = 'https://assets.coingecko.com/coins/images/30148/standard/brett.png';
-        } else if (symbol.toUpperCase() === 'DEGEN') {
-          logoUrl = 'https://assets.coingecko.com/coins/images/34515/standard/degen.png';
-        } else if (symbol.toUpperCase() === 'TOSHI') {
-          logoUrl = 'https://assets.coingecko.com/coins/images/31064/standard/toshi.jpg';
-        } else if (symbol.toUpperCase() === 'HIGHER') {
-          logoUrl = 'https://assets.coingecko.com/coins/images/35738/standard/higher.png';
-        }
+        // Enhanced logo detection
+        let logoUrl = getTokenLogo(attributes, symbol, tokenAddress);
         
         // UPDATED SCORING: 1-hour focused for divine tokens + new pair bonuses
         let score = 0;
@@ -129,7 +84,7 @@ async function getBaseBuySignals() {
         else if (volume1h > 50000) score += 3;  // $50K+ in 1h is good
         else if (volume1h > 25000) score += 2;  // $25K+ in 1h is decent
         else if (volume1h > 10000) score += 1;  // $10K+ in 1h is minimal
-        else if (volume1h < 500) score -= 2;    // Under $500 in 1h is very low (adjusted for new pairs)
+        else if (volume1h < 500) score -= 2;    // Under $500 in 1h is very low
         
         // 24-hour context (reduced weight but still important)
         if (change24h > 100) score += 4;      // Reduced from 10
@@ -149,7 +104,7 @@ async function getBaseBuySignals() {
         else if (transactions1h > 100) score += 3; // Active in last hour
         else if (transactions1h > 50) score += 2;  // Moderate activity in last hour
         else if (transactions1h > 20) score += 1;  // Some activity in last hour
-        else if (transactions1h < 2) score -= 2;   // Very low 1h activity (adjusted)
+        else if (transactions1h < 2) score -= 2;   // Very low 1h activity
         
         // 24-hour transaction activity (reduced weight)
         if (transactions24h > 1000) score += 1; // Reduced from 2
@@ -174,10 +129,10 @@ async function getBaseBuySignals() {
         else if (change5m < -15) score -= 2;  // Moderate 5m dump
         else if (change5m < -10) score -= 1;  // Small 5m dump
         
-        // Liquidity scoring (adjusted for new pairs)
+        // Liquidity scoring (adjusted for new pairs) - FIXED: No decimals
         if (liquidity > 1000000) score += 1;
-        else if (liquidity > 100000) score += 0.5; // New tier for new pairs
-        else if (liquidity < 10000) score -= 1;    // Adjusted threshold
+        else if (liquidity > 100000) score += 1; // Fixed: changed from 0.5 to 1
+        else if (liquidity < 10000) score -= 1;
         
         return {
           name: name.length > 15 ? name.substring(0, 15) + '...' : name,
@@ -207,27 +162,33 @@ async function getBaseBuySignals() {
         };
       });
       
-      // Updated filtering: Focus on 1-hour activity and include very new pairs
-      const filteredTokens = pageTokens.filter(token => 
-        token.price > 0 && 
-        token.price < 1000000 && 
-        (
-          // Include high-activity tokens (existing criteria)
-          (token.volume1h > 500 && token.transactions1h > 2) ||
-          // OR include very new pairs (less than 24 hours old) with any activity
-          (token.tokenAge < 24 && token.volume1h > 100 && token.transactions1h > 1) ||
-          // OR include explosive 1h gainers regardless of volume
-          (token.change1h > 20) ||
-          // OR include explosive 5m gainers (catching very fresh signals)
-          (token.change5m > 15)
-        )
-      );
+      // Base69 Quality Gates: $30K volume + 10% liquidity ratio
+      const filteredTokens = pageTokens.filter(token => {
+        const liquidityRatio = token.marketCap > 0 ? (token.liquidity / token.marketCap) * 100 : 0;
+        
+        return (
+          token.price > 0 && 
+          token.price < 1000000 && 
+          token.volume1h >= 30000 && // BASE69 VOLUME GATE: $30K minimum in 1 hour
+          liquidityRatio >= 10 && // BASE69 LIQUIDITY GATE: 10% minimum liquidity ratio
+          (
+            // Include high-activity tokens
+            (token.volume1h > 50000 && token.transactions1h > 10) ||
+            // OR include very new pairs with strong activity
+            (token.tokenAge < 24 && token.volume1h > 30000 && token.transactions1h > 5) ||
+            // OR include explosive 1h gainers
+            (token.change1h > 20) ||
+            // OR include explosive 5m gainers
+            (token.change5m > 15)
+          )
+        );
+      });
       
       allTokens = allTokens.concat(filteredTokens);
       page++;
     }
     
-    console.log(`Total tokens collected: ${allTokens.length}`);
+    console.log(`Total tokens collected: ${allTokens.length} (Base69 gates: $30K+ volume + 10%+ liquidity ratio)`);
     
     // Remove duplicates by token address
     const uniqueTokens = allTokens.filter((token, index, self) => 
@@ -251,6 +212,37 @@ async function getBaseBuySignals() {
   }
 }
 
+// Enhanced logo detection function
+function getTokenLogo(attributes, symbol, tokenAddress) {
+  let logoUrl = null;
+  
+  // Method 1: GeckoTerminal direct
+  if (attributes.base_token_image_url && 
+      attributes.base_token_image_url.startsWith('http') && 
+      !attributes.base_token_image_url.includes('missing.png')) {
+    logoUrl = attributes.base_token_image_url;
+  }
+  
+  // Method 2: DEXScreener CDN
+  if (!logoUrl && tokenAddress && tokenAddress.length === 42) {
+    logoUrl = `https://dd.dexscreener.com/ds-data/tokens/base/${tokenAddress.toLowerCase()}.png`;
+  }
+  
+  // Method 3: Popular Base tokens
+  const popularLogos = {
+    'BRETT': 'https://assets.coingecko.com/coins/images/30148/standard/brett.png',
+    'DEGEN': 'https://assets.coingecko.com/coins/images/34515/standard/degen.png',
+    'TOSHI': 'https://assets.coingecko.com/coins/images/31064/standard/toshi.jpg',
+    'HIGHER': 'https://assets.coingecko.com/coins/images/35738/standard/higher.png'
+  };
+  
+  if (!logoUrl && popularLogos[symbol.toUpperCase()]) {
+    logoUrl = popularLogos[symbol.toUpperCase()];
+  }
+  
+  return logoUrl;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -267,20 +259,20 @@ module.exports = async function handler(req, res) {
   try {
     const tokens = await getBaseBuySignals();
     
-    console.log(`API returning ${tokens.length} tokens to frontend`);
+    console.log(`B69 Oracle returning ${tokens.length} tokens to terminal`);
     
     return res.json({
       status: 'success',
       tokens: tokens,
       count: tokens.length,
       timestamp: new Date().toISOString(),
-      message: `Base69 dimension signals retrieved - ${tokens.length} sacred tokens (1-hour focused)`
+      message: `Base69 Oracle active - ${tokens.length} entities selected (gates: $30K+ volume, 10%+ liquidity ratio)`
     });
     
   } catch (error) {
-    console.error('Base leaderboard error:', error);
+    console.error('Base69 Oracle error:', error);
     return res.status(500).json({ 
-      error: 'Base dimension connection failed',
+      error: 'Oracle dimensional scan disrupted',
       details: error.message 
     });
   }

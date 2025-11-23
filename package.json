@@ -1,19 +1,14 @@
 {
-  "name": "aiya-wellness-chatbot",
+  "name": "nad6900-oracle",
   "version": "1.0.0",
-  "description": "Holistic wellness AI chatbot powered by Claude",
-  "main": "server/server.js",
+  "description": "NAD6900 - Keone Hon's Market Oracle Terminal",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "nodemon server/server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
-  "keywords": [
-    "wellness",
-    "ai",
-    "chatbot",
-    "holistic health"
-  ],
-  "author": "Your Name",
+  "keywords": ["nad6900", "monad", "crypto", "oracle", "keone-hon"],
+  "author": "NAD6900",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.6.7",

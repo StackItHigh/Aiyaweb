@@ -473,12 +473,15 @@
             });
         });
 
-        // Floating character click
-        document.querySelector('.character-floating').addEventListener('click', () => {
-            document.querySelector('#chat').scrollIntoView({
-                behavior: 'smooth'
-            });
+// Floating character click (only run if element exists)
+const floater = document.querySelector('.character-floating');
+if (floater) {
+    floater.addEventListener('click', () => {
+        document.querySelector('#chat').scrollIntoView({
+            behavior: 'smooth'
         });
+    });
+}
 
         // Add some terminal startup effects
         setTimeout(() => {

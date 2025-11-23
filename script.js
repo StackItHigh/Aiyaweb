@@ -1,8 +1,3 @@
-// DOM elements
-const chatMessages = document.querySelector('.chat-messages');
-const chatInput = document.querySelector('.chat-input input');
-const sendButton = document.querySelector('.chat-input button');
-
 // Matrix rain effect
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
@@ -10,7 +5,7 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const matrix = "BASE69ETH0123456789ABCDEF█▓▒░";
+const matrix = "NAD6900MONAD0123456789ABCDEF█▓▒░";
 const matrixArray = matrix.split("");
 const fontSize = 12;
 const columns = canvas.width / fontSize;
@@ -21,10 +16,10 @@ for(let x = 0; x < columns; x++) {
 }
 
 function drawMatrix() {
-    ctx.fillStyle = 'rgba(0, 82, 255, 0.04)';
+    ctx.fillStyle = 'rgba(111, 84, 255, 0.04)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#00FF00';
+    ctx.fillStyle = '#6f54ff';
     ctx.font = fontSize + 'px Courier New';
 
     for(let i = 0; i < drops.length; i++) {
@@ -46,134 +41,170 @@ window.addEventListener('resize', () => {
     canvas.height = window.innerHeight;
 });
 
-// Add a message to the chat
-function addMessage(content, isUser) {
-    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    const messageHTML = `
-        <div class="message ${isUser ? 'user' : 'base69'}">
-            <div class="message-avatar">${isUser ? 'U' : 'AI'}</div>
-            <div class="message-content">
-                <p>${content}</p>
-                <span class="message-time">${time}</span>
-            </div>
+// Chat functionality
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+const chatMessages = document.getElementById('chatMessages');
+
+function addMessage(content, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user' : 'nad6900'}`;
+    
+    const now = new Date();
+    const timeString = now.toTimeString().split(' ')[0];
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">${isUser ? 'U' : 'K'}</div>
+        <div class="message-content">
+            <p>${content}</p>
+            <span class="message-time">${timeString}</span>
         </div>
     `;
     
-    chatMessages.innerHTML += messageHTML;
+    chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Show typing indicator
-function showTypingIndicator() {
-    const typingHTML = `
-        <div class="message base69" id="typing-indicator">
-            <div class="message-avatar">AI</div>
-            <div class="message-content">
-                <div class="typing">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
+function showTyping() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message nad6900';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="message-avatar">K</div>
+        <div class="message-content">
+            <div class="typing">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
             </div>
         </div>
     `;
-    chatMessages.innerHTML += typingHTML;
+    chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Remove typing indicator
-function removeTypingIndicator() {
-    const indicator = document.getElementById('typing-indicator');
-    if (indicator) indicator.remove();
+function hideTyping() {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
 }
 
-// Call backend API that securely connects to Claude
-async function getBase69Response(userMessage) {
+async function processCommand(input) {
+    const command = input.toLowerCase().trim();
+    
+    // Handle clear command locally
+    if (command === 'clear') {
+        chatMessages.innerHTML = `
+            <div class="message nad6900">
+                <div class="message-avatar">K</div>
+                <div class="message-content">
+                    <p>[TERMINAL CLEARED] Ready for new wisdom.</p>
+                    <span class="message-time">${new Date().toTimeString().split(' ')[0]}</span>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Show typing indicator
+    showTyping();
+    
     try {
-        console.log('Sending message to BASE69 terminal:', userMessage);
-        
+        // Send message to Claude API
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ message: userMessage })
+            body: JSON.stringify({
+                message: input
+            })
         });
         
-        console.log('BASE69 response status:', response.status);
-        
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('BASE69 error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('BASE69 received data:', data);
-        return data.reply;
+        
+        // Hide typing indicator and show response
+        hideTyping();
+        addMessage(data.reply);
+        
     } catch (error) {
-        console.error('BASE69 terminal error:', error);
-        return "[CONNECTION ERROR] BASE69 terminal temporarily offline. Please try again.";
+        console.error('Error:', error);
+        hideTyping();
+        addMessage('Connection error. The Oracle is temporarily unavailable. Please try again.');
     }
 }
 
-// Handle sending messages
-async function sendMessage() {
-    const message = chatInput.value.trim();
-    if (!message) return;
-    
-    // Add user message to chat
-    addMessage(message, true);
-    chatInput.value = '';
-    
-    // Show typing indicator
-    showTypingIndicator();
-    
-    // Get response from backend
-    try {
-        const response = await getBase69Response(message);
-        
-        // Remove typing indicator
-        removeTypingIndicator();
-        
-        // Add AI response to chat
-        addMessage(response, false);
-    } catch (error) {
-        console.error('BASE69 Error:', error);
-        removeTypingIndicator();
-        addMessage("[SYSTEM ERROR] Unable to process request. BASE69 terminal may be experiencing issues.", false);
+function sendMessage() {
+    const input = messageInput.value.trim();
+    if (input) {
+        addMessage(input, true);
+        messageInput.value = '';
+        processCommand(input);
     }
-}
-
-// Handle clear command locally
-function handleClearCommand() {
-    chatMessages.innerHTML = `
-        <div class="message base69">
-            <div class="message-avatar">AI</div>
-            <div class="message-content">
-                <p>[TERMINAL CLEARED] BASE69 ready for new commands.</p>
-                <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            </div>
-        </div>
-    `;
 }
 
 // Event listeners
 sendButton.addEventListener('click', sendMessage);
-chatInput.addEventListener('keypress', (e) => {
+messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-        const message = chatInput.value.trim().toLowerCase();
-        if (message === 'clear') {
-            handleClearCommand();
-            chatInput.value = '';
-        } else {
-            sendMessage();
-        }
+        sendMessage();
     }
 });
 
 // Auto-focus input
-chatInput.focus();
+messageInput.focus();
+
+// Live Market Data
+async function fetchMarketData() {
+    try {
+        // Fetch crypto data from CoinGecko
+        const cryptoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+        const cryptoData = await cryptoResponse.json();
+
+        const ticker = document.getElementById('liveTicker');
+        let tickerHTML = '';
+
+        // S&P 500 (using SPY ETF as proxy - would need stock API for real data)
+        tickerHTML += '<span class="ticker-item neutral">S&P 500 <span class="ticker-price">Loading...</span></span>';
+
+        // NASDAQ (using QQQ ETF as proxy - would need stock API for real data)
+        tickerHTML += '<span class="ticker-item neutral">NASDAQ <span class="ticker-price">Loading...</span></span>';
+
+        // Bitcoin
+        const btcChange = cryptoData.bitcoin.usd_24h_change;
+        const btcClass = btcChange >= 0 ? 'positive' : 'negative';
+        const btcEmoji = btcChange >= 0 ? '🚀' : '📉';
+        tickerHTML += `<span class="ticker-item ${btcClass}">BTC ${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}% ${btcEmoji}</span>`;
+
+        // Ethereum
+        const ethChange = cryptoData.ethereum.usd_24h_change;
+        const ethClass = ethChange >= 0 ? 'positive' : 'negative';
+        const ethEmoji = ethChange >= 0 ? '⚡' : '📊';
+        tickerHTML += `<span class="ticker-item ${ethClass}">ETH ${ethChange >= 0 ? '+' : ''}${ethChange.toFixed(2)}% ${ethEmoji}</span>`;
+
+        // MONAD (placeholder - not live yet)
+        tickerHTML += '<span class="ticker-item neutral">MONAD <span class="ticker-coming">Coming Soon 💎</span></span>';
+
+        // Duplicate for seamless scroll
+        ticker.innerHTML = tickerHTML + tickerHTML;
+        
+    } catch (error) {
+        console.error('Error fetching market data:', error);
+        document.getElementById('liveTicker').innerHTML = 
+            '<span class="ticker-item neutral">Market data temporarily unavailable</span>';
+    }
+}
+
+// Fetch market data on load
+fetchMarketData();
+
+// Refresh market data every 60 seconds
+setInterval(fetchMarketData, 60000);
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -204,39 +235,12 @@ setTimeout(() => {
         welcomeTitle.style.borderRight = 'none';
         welcomeTitle.style.width = 'auto';
     }
-    
-    // Remove the blinking cursor from ASCII subtitle after typing completes
-    const asciiSubtitle = document.getElementById('ascii-subtitle');
-    if (asciiSubtitle) {
-        setTimeout(() => {
-            asciiSubtitle.style.borderRight = 'none';
-        }, 1000);
-    }
 }, 4000);
-
-// Connect suggestion chips (if any exist)
-document.addEventListener('DOMContentLoaded', () => {
-    const suggestionChips = document.querySelectorAll('.suggestion-chip');
-    
-    suggestionChips.forEach(chip => {
-        chip.removeEventListener('click', suggestionChipHandler);
-        chip.addEventListener('click', suggestionChipHandler);
-    });
-});
-
-function suggestionChipHandler(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const message = event.target.textContent;
-    chatInput.value = message;
-    sendMessage();
-}
 
 // Terminal boot sequence
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('BASE69 Terminal initializing...');
-    console.log('Brian Armstrong ETH Stack Protocol v1.0');
-    console.log('Connection to Base chain: ESTABLISHED');
+    console.log('NAD6900 Terminal initializing...');
+    console.log('Keone Hon Oracle Protocol v6900');
+    console.log('Connection to Monad chain: ESTABLISHED');
     console.log('Terminal ready for commands.');
 });

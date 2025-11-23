@@ -611,12 +611,13 @@ nav ul li a:hover {
     display: flex;
     flex-wrap: nowrap;
     white-space: nowrap;
+    overflow: hidden;
+    animation: scroll-left 25s linear infinite;
 }
 
 .ticker-scroll span {
     padding-right: 50px;
 }
-
 
 .ticker-item {
     display: inline-block;
@@ -648,10 +649,16 @@ nav ul li a:hover {
     font-size: 14px;
 }
 
+/* FIXED animation — scroll full width */
 @keyframes scroll-left {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
 }
+
 
 .chat-section {
     padding: 60px 40px;

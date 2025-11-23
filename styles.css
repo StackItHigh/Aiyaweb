@@ -672,6 +672,12 @@ nav ul li a:hover {
     }
 }
 
+.ticker-scroll-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
 
 .chat-section {
     padding: 60px 40px;

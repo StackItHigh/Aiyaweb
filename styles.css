@@ -305,7 +305,7 @@ nav ul li a:hover {
 
 .logo-header {
     text-align: center;
-    padding: 60px 20px 40px;
+    padding: 20px 20px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -608,10 +608,15 @@ nav ul li a:hover {
 }
 
 .ticker-scroll {
-    display: inline-block;
+    display: flex;
+    flex-wrap: nowrap;
     white-space: nowrap;
-    animation: scroll-left 20s linear infinite;
 }
+
+.ticker-scroll span {
+    padding-right: 50px;
+}
+
 
 .ticker-item {
     display: inline-block;

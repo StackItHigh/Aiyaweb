@@ -423,6 +423,12 @@ nav ul li a:hover {
     overflow: hidden;
 }
 
+.ticker-scroll-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
 /* Newspaper Headlines Section */
 .headlines-section {
     padding: 60px 40px;

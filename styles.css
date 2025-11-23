@@ -416,6 +416,13 @@ nav ul li a:hover {
     overflow: hidden;
 }
 
+.market-ticker-fullwidth {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    overflow: hidden;
+}
+
 /* Newspaper Headlines Section */
 .headlines-section {
     padding: 60px 40px;
